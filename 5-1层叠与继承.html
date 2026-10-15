@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<link>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24001011026司雅博</title>
+       <link rel="stylesheet" href="css.css"></link>
+    <style>
+        p{
+            color: red;
+            font-size: 100px;
+        }
+        .text{
+            color:chartreuse;
+        }
+        #text{
+            color:darkgoldenrod;
+        }
+        .box p{
+            color:darkcyan;
+        }
+        #box #text{
+            color:darkmagenta;
+        }
+        .text{
+            color:deeppink!important;
+            /* 可覆盖内嵌 */
+        }
+        #box{
+            /* 宽400，高400，灰色背景，距离、字间距5px */
+            width: 1400px;
+            height: 600px;
+            background-color: #ccc;
+            margin: 25px;
+            padding: 25px;
+            letter-spacing: 25px;
+            /* 圆角矩形 */
+            border-radius: 25px;
+                   }
+    </style>
+<!-- 优先级 标签# -->
+    <!-- 后定义的覆盖前定义的 -->
+</head>
+<body>
+    <h2>层叠与继承</h2>
+    <div id="box" class="box">
+        <p id="text" class="text">1026司雅博</p>
+        <p>层叠与继承的优先级</p>
+    </div>
+</body>
+</html>

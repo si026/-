@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>司雅博的《高级网页设计》课堂实践</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    header {
+        text-align: center;
+        color: #fff;
+        margin-bottom: 50px;
+        animation: fadeInDown 0.8s ease-out;
+    }
+
+    header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    header .subtitle {
+        font-size: 1.1em;
+        opacity: 0.9;
+        font-weight: 300;
+    }
+
+    header .info {
+        margin-top: 15px;
+        font-size: 0.95em;
+        opacity: 0.85;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 8px 20px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .card h2 {
+        color: #333;
+        font-size: 1.6em;
+        margin-bottom: 25px;
+        padding-bottom: 12px;
+        border-bottom: 3px solid #667eea;
+        display: inline-block;
+    }
+
+    .link-list {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 18px;
+        padding-left: 0;
+        border-left: none;
+    }
+
+    .link-list li {
+        perspective: 800px;
+        margin-bottom: 0;
+    }
+
+    .link-list li::before {
+        display: none;
+    }
+
+    .link-list a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px 20px;
+        background: #fff;
+        border-radius: 16px;
+        text-decoration: none;
+        color: #333;
+        font-size: 1em;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .link-list a::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .link-list a:hover {
+        transform: translateY(-10px);
+        border-color: #667eea;
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(180deg, #f8f9ff 0%, #fff 100%);
+        color: #333;
+    }
+
+    .link-list a:hover::before {
+        transform: scaleX(1);
+    }
+
+    .link-list .icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        border-radius: 50%;
+        margin-bottom: 14px;
+        font-size: 1.2em;
+        font-weight: bold;
+        transition: all 0.4s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        flex-shrink: 0;
+    }
+
+    .link-list a:hover .icon {
+        transform: rotate(360deg) scale(1.1);
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.5);
+    }
+
+    .prompt-section {
+        background: #2d2d2d;
+        color: #e0e0e0;
+        border-radius: 12px;
+        padding: 25px;
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 0.95em;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border-left: 4px solid #667eea;
+    }
+
+    footer {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 40px;
+        font-size: 0.9em;
+        animation: fadeInUp 1s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 600px) {
+        header h1 {
+            font-size: 1.8em;
+        }
+
+        .card {
+            padding: 25px 20px;
+        }
+
+        .link-list a {
+            font-size: 0.95em;
+            padding: 14px 16px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>司雅博的《高级网页设计》课堂实践</h1>
+        <p class="subtitle">Advanced Web Design - Classroom Practice</p>
+        <div class="info">学号：24001011026 | 姓名：司雅博</div>
+    </header>
+
+    <div class="card">
+        <h2>📂 课堂实践作品</h2>
+        <ul class="link-list">
+            <li><a href="name.html"><span class="icon">1</span>name.html - 个人信息</a></li>
+            <li><a href="2-1.html"><span class="icon">2</span>司雅博的第一个网页：html元素</a></li>
+            <li><a href="2-2.html"><span class="icon">3</span>超链接与图片</a></li>
+            <li><a href="3-1.html"><span class="icon">4</span>HTML表单from</a></li>
+            <li><a href="3-2.html"><span class="icon">5</span>层叠样式表 CSS</a></li>
+            <li><a href="4-1.html"><span class="icon">6</span>CSS进阶</a></li>
+            <li><a href="5-1层叠与继承.html"><span class="icon">7</span>CSS层叠与继承</a></li>
+            <li><a href="5-2盒模型.html"><span class="icon">8</span>盒模型 Box Model</a></li>
+            <li><a href="6-1盒模型.html"><span class="icon">9</span>Flex 盒模型</a></li>
+            <li><a href="6-2.html"><span class="icon">10</span>CSS布局练习</a></li>
+            <li><a href="7-1上图下文.html"><span class="icon">11</span>上图下文卡片布局</a></li>
+            <li><a href="7-2左图右文.html"><span class="icon">12</span>左图右文布局</a></li>
+            <li><a href="8-1 css选择器.html"><span class="icon">13</span>CSS选择器</a></li>
+            <li><a href="9-1 transiton.html"><span class="icon">14</span>CSS过渡 Transition</a></li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>📝 本页面临时创建提示词</h2>
+        <div class="prompt-section">
+"创建一个新页面，包括本目录下的所有网页的超链接，使用原生代码，不使用cdn，新页面名称为24001011026司雅博.html，主题为司雅博的《高级网页设计》课堂实践，美化页面，页面中包括本提示词。"
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 司雅博 | 《高级网页设计》课堂实践 | Powered by Native HTML/CSS</p>
+    </footer>
+</div>
+</body>
+</html>

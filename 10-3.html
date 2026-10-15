@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Query 背景变色</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 62.5%; }
+        html, body { height: 100%; }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .full-box {
+            width: 100vw;
+            height: 100vh;
+            background-color: #2c3e50;
+            transition: background-color 0.6s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+        }
+        .full-box .name {
+            color: #fff;
+            font-size: 4.8rem;
+            font-weight: bold;
+            letter-spacing: 0.8rem;
+            text-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.4);
+        }
+        .full-box .sid {
+            color: #fff;
+            font-size: 2.4rem;
+            letter-spacing: 0.4rem;
+            text-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 1200px) {
+            .full-box { background-color: #34495e; }
+        }
+        @media (max-width: 992px) {
+            html { font-size: 56%; }
+            .full-box { background-color: #16a085; }
+        }
+        @media (max-width: 768px) {
+            html { font-size: 50%; }
+            .full-box { background-color: #e67e22; }
+        }
+        @media (max-width: 576px) {
+            html { font-size: 44%; }
+            .full-box { background-color: #c0392b; }
+        }
+    </style>
+</head>
+<body>
+    <div class="full-box">
+        <span class="name">司雅博</span>
+        <span class="sid">24001011026</span>
+    </div>
+</body>
+</html>

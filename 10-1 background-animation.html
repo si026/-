@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背景颜色动画</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+            background-color: #f0f0f0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        h2 { margin-bottom: 10px; color: #333; }
+
+        .box-simple {
+            width: 200px;
+            height: 200 px; 
+            animation: bgChange 4s infi nite;
+            }   
+            @keyframes bgChange {
+            0%   { background-color: #ff6b6b; }
+            25%  { background-color: #feca57; }
+            50%  { background-color: #48dbfb; }
+            75%  { background-color: #1dd1a1; }
+            100% { background-color: #ff6b6b; }
+        }
+
+        .box-gradient {
+            width: 300px;
+            height: 200px;
+            background: linear-gradient(120deg, #ff6b6b, #feca57, #48dbfb, #1dd1a1, #a29bfe);
+            background-size: 400% 400%;
+            animation: gradientMove 6s ease infinite;
+        }
+        @keyframes gradientMove {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .box-hsl {
+            width: 200px;
+            height: 200px;
+            animation: hueRotate 5s linear infinite;
+        }
+        @keyframes hueRotate {
+            0%   { background-color: hsl(0, 80%, 60%); }
+            100% { background-color: hsl(360, 80%, 60%); }
+        }
+    </style>
+</head>
+<body>
+    <h2>1. 关键帧颜色切换（离散跳变）</h2>
+    <div class="box-simple"></div>
+
+    <h2>2. 渐变色位置动画（丝滑流动）</h2>
+    <div class="box-gradient"></div>
+
+    <h2>3. HSL 色相旋转（彩虹渐变）</h2>
+    <div class="box-hsl"></div>
+</body>
+</html>

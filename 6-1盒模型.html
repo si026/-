@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>flex盒模型</title>
+    <style>
+        /* 外层大容器，横向放4个模块 */
+        .container{
+            display: flex;
+            gap:20px;
+            padding:20px;
+        }
+        /* 每个模块外框 */
+        .item-box{
+            width:220px;
+            height:220px;
+            border:1px solid #ccc;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#eee;
+        }
+        .box{
+            width:80px;
+            height:80px;
+            border:1px solid #666;
+            background:#ddd;
+        }
+        /* 第二个：垂直排列 */
+        .col{
+            flex-direction:column;
+            gap:10px;
+        }
+        /* 第三个：2行2列 */
+        .grid2x2{
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:center;
+            gap:10px;
+        }
+        .grid2x2 .box{
+            width:80px;
+            height:80px;
+        }
+        /* 第四个：上面宽方框，下面两个窄方框 */
+        .layout3{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            width: 180px;
+        }
+        /* 上方宽盒子 */
+        .box-top{
+            width:100%;
+            height:80px;
+            border:1px solid #666;
+            background:#ddd;
+        }
+        .layout-bottom{
+            display:flex;
+            gap:10px;
+        }
+        /* 下方两个盒子平分宽度 */
+        .layout-bottom .box{
+            flex:1;
+            height:80px;
+            border:1px solid #666;
+            background:#ddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>司雅博flex</h2>
+    <div class="container">
+        <!-- 第1个：单个方块 -->
+        <div class="item-box">
+            <div class="box"></div>
+        </div>
+        <!-- 第2个：垂直两个 -->
+        <div class="item-box col">
+            <div class="box"></div>
+            <div class="box"></div>
+        </div>
+        <!-- 第3个：2*2四个方块 -->
+        <div class="item-box grid2x2">
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+        </div>
+        <!-- 第4个：上宽1个，下面并排2个 -->
+        <div class="item-box">
+            <div class="layout3">
+                <div class="box-top"></div>
+                <div class="layout-bottom">
+                    <div class="box"></div>
+                    <div class="box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h3>浮动</h3>
+</body>
+</html>

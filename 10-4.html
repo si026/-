@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Query 响应式布局</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; min-width: 320px; }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0 30px;
+            color: #2c3e50;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { font-size: 14px; color: #7f8c8d; }
+
+        .box-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 0 auto;
+        }
+        .box {
+            width: calc(12.5% - 14px);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            height: 140px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .box:hover { transform: translateY(-4px); }
+
+        .box:nth-child(1) { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .box:nth-child(2) { background: linear-gradient(135deg, #feca57, #ff9f43); }
+        .box:nth-child(3) { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+        .box:nth-child(4) { background: linear-gradient(135deg, #48dbfb, #0abde3); }
+        .box:nth-child(5) { background: linear-gradient(135deg, #5f27cd, #341f97); }
+        .box:nth-child(6) { background: linear-gradient(135deg, #ff9ff3, #f368e0); }
+        .box:nth-child(7) { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .box:nth-child(8) { background: linear-gradient(135deg, #222f3e, #576574); }
+
+        @media (max-width: 1600px) {
+            .box { width: calc(25% - 12px); }
+        }
+        @media (max-width: 992px) {
+            .box { width: calc(33.333% - 10.67px); }
+        }
+        @media (max-width: 768px) {
+            .box { width: calc(50% - 8px); }
+        }
+        @media (max-width: 480px) {
+            .box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>司雅博24001011026</h1>
+        <p>拖动浏览器窗口观察一行显示盒子数量的变化</p>
+    </div>
+    <div class="box-wrap">
+        <div class="box">1</div>
+        <div class="box">2</div>
+        <div class="box">3</div>
+        <div class="box">4</div>
+        <div class="box">5</div>
+        <div class="box">6</div>
+        <div class="box">7</div>
+        <div class="box">8</div>
+    </div>
+</body>
+</html>

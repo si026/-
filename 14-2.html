@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博
+日期：2026.10.22
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 六种基本数据类型</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .syb_badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; }
+        .syb_row { font-size: 14px; margin: 8px 0; line-height: 1.7; }
+        .syb_code {
+            background: #fdecea;
+            color: #c0392b;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .syb_typeof {
+            color: #2980b9;
+            font-family: Consolas, "Courier New", monospace;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .syb_desc {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 六种基本数据类型</h1>
+        <p>五种基本类型：Number、String、Boolean、Undefined、Null，加上一种引用类型：Object</p>
+    </div>
+
+    <!-- 卡片由下方 JavaScript 动态生成 -->
+    <div class="syb_cards" id="syb_cards"></div>
+
+    <div class="syb_note">
+        注意：typeof null 返回 "object" 是 JavaScript 的历史遗留问题，null 本质上是基本类型；
+        此外 ES6 新增了 Symbol（符号）、ES2020 新增了 BigInt（大整数），现代 JavaScript 的数据类型已不止六种。
+    </div>
+
+    <script>
+        //第一步：声明六种数据类型的变量（变量名全部以 syb_ 开头）
+        var syb_num = 42;
+        var syb_str = "司雅博";
+        var syb_bool = true;
+        var syb_undef;
+        var syb_null = null;
+        var syb_obj = { name: "司雅博", age: 20 };
+
+        //第二步：把六种类型的信息整理成数组（当前值和 typeof 结果都是实时取的）
+        var syb_typeList = [
+            { name: "Number 数字型", code: "var syb_num = 42;", value: syb_num, type: typeof syb_num, desc: "整数和小数，如 3.14、1e5，特殊值有 NaN、Infinity" },
+            { name: "String 字符串型", code: 'var syb_str = "司雅博";', value: syb_str, type: typeof syb_str, desc: "引号包裹的文本，单引号或双引号均可" },
+            { name: "Boolean 布尔型", code: "var syb_bool = true;", value: syb_bool, type: typeof syb_bool, desc: "只有 true 和 false 两个值，常用于条件判断" },
+            { name: "Undefined 未定义型", code: "var syb_undef;", value: syb_undef, type: typeof syb_undef, desc: "声明但未赋值的变量，默认值就是 undefined" },
+            { name: "Null 空值型", code: "var syb_null = null;", value: syb_null, type: typeof syb_null, desc: "表示空值，注意 typeof null 会返回 object（见下方说明）" },
+            { name: "Object 对象型", code: 'var syb_obj = { name: "司雅博", age: 20 };', value: JSON.stringify(syb_obj), type: typeof syb_obj, desc: "引用类型，包括对象、数组、函数等" }
+        ];
+
+        //第三步：循环拼接 HTML，生成六张卡片
+        var syb_html = "";
+        for (var syb_i = 0; syb_i < syb_typeList.length; syb_i++) {
+            var syb_item = syb_typeList[syb_i];
+            syb_html += '<div class="syb_card">';
+            syb_html += '<div class="syb_card_title"><span class="syb_badge">' + (syb_i + 1) + '</span><strong>' + syb_item.name + '</strong></div>';
+            syb_html += '<div class="syb_row">声明：<code class="syb_code">' + syb_item.code + '</code></div>';
+            syb_html += '<div class="syb_row">当前值：<code class="syb_code">' + syb_item.value + '</code></div>';
+            syb_html += '<div class="syb_row">typeof 结果：<span class="syb_typeof">' + syb_item.type + '</span></div>';
+            syb_html += '<div class="syb_desc">' + syb_item.desc + '</div>';
+            syb_html += '</div>';
+        }
+
+        //第四步：把卡片渲染到页面上
+        document.getElementById("syb_cards").innerHTML = syb_html;
+    </script>
+</body>
+</html>

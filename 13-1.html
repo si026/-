@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Awesome 图标展示 - 字体图标方式</title>
+    <link rel="stylesheet" href="cdn/fontawesome-all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 40px 20px;
+            color: #fff;
+        }
+        .fa_header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+        .fa_header h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .fa_header p {
+            font-size: 16px;
+            color: #aaa;
+        }
+        .fa_header .fa-bolt {
+            color: #e94560;
+            margin-right: 8px;
+        }
+        .fa_container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .fa_section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .fa_section h2 {
+            font-size: 22px;
+            color: #e94560;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(233, 69, 96, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fa_grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+        .fa_item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .fa_item:hover {
+            background: rgba(233, 69, 96, 0.1);
+            border-color: #e94560;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+        }
+        .fa_item i {
+            font-size: 36px;
+            margin-bottom: 12px;
+            color: #fff;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .fa_item:hover i {
+            color: #e94560;
+            transform: scale(1.15);
+        }
+        .fa_item span {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            word-break: break-all;
+        }
+        .fa_colors .fa_item i.fa-red { color: #e94560; }
+        .fa_colors .fa_item i.fa-blue { color: #3498db; }
+        .fa_colors .fa_item i.fa-green { color: #2ecc71; }
+        .fa_colors .fa_item i.fa-yellow { color: #f1c40f; }
+        .fa_colors .fa_item i.fa-purple { color: #9b59b6; }
+        .fa_colors .fa_item i.fa-orange { color: #e67e22; }
+        .fa_sizes .fa_item i.fa-xs { font-size: 14px; }
+        .fa_sizes .fa_item i.fa-sm { font-size: 20px; }
+        .fa_sizes .fa_item i.fa-md { font-size: 32px; }
+        .fa_sizes .fa_item i.fa-lg { font-size: 48px; }
+        .fa_sizes .fa_item i.fa-xl { font-size: 64px; }
+        .fa_spin { animation: fa-spin 2s linear infinite; }
+        .fa_pulse { animation: fa-pulse 1.5s ease-in-out infinite; }
+        @keyframes fa-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fa-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .fa_examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+        .fa_example-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .fa_example-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(233, 69, 96, 0.4);
+        }
+        .fa_example-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        .fa_example-card i {
+            font-size: 24px;
+            color: #3498db;
+        }
+        .fa_example-card .fa-info {
+            color: #fff;
+            font-size: 14px;
+        }
+        .fa_badge {
+            position: relative;
+            display: inline-block;
+        }
+        .fa_badge i { font-size: 32px; color: #fff; }
+        .fa_badge-num {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background: #e94560;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="fa_header">
+        <h1><i class="fa-solid fa-bolt fa-bolt"></i>Font Awesome 图标库</h1>
+        <p>字体图标方式 · 通过 CSS 类名直接使用</p>
+    </div>
+
+    <div class="fa_container">
+        <div class="fa_section">
+            <h2><i class="fa-solid fa-star"></i> 常用图标</h2>
+            <div class="fa_grid">
+                <div class="fa_item"><i class="fa-solid fa-home"></i><span>home</span></div>
+                <div class="fa_item"><i class="fa-solid fa-user"></i><span>user</span></div>
+                <div class="fa_item"><i class="fa-solid fa-envelope"></i><span>envelope</span></div>
+                <div class="fa_item"><i class="fa-solid fa-phone"></i><span>phone</span></div>
+                <div class="fa_item"><i class="fa-solid fa-search"></i><span>search</span></div>
+                <div class="fa_item"><i class="fa-solid fa-heart"></i><span>heart</span></div>
+                <div class="fa_item"><i class="fa-solid fa-bookmark"></i><span>bookmark</span></div>
+                <div class="fa_item"><i class="fa-solid fa-share"></i><span>share</span></div>
+                <div class="fa_item"><i class="fa-solid fa-download"></i><span>download</span></div>
+                <div class="fa_item"><i class="fa-solid fa-upload"></i><span>upload</span></div>
+                <div class="fa_item"><i class="fa-solid fa-cog"></i><span>cog</span></div>
+                <div class="fa_item"><i class="fa-solid fa-bell"></i><span>bell</span></div>
+                <div class="fa_item"><i class="fa-solid fa-calendar"></i><span>calendar</span></div>
+                <div class="fa_item"><i class="fa-solid fa-clock"></i><span>clock</span></div>
+                <div class="fa_item"><i class="fa-solid fa-map-marker-alt"></i><span>map-marker</span></div>
+                <div class="fa_item"><i class="fa-solid fa-camera"></i><span>camera</span></div>
+                <div class="fa_item"><i class="fa-solid fa-music"></i><span>music</span></div>
+                <div class="fa_item"><i class="fa-solid fa-video"></i><span>video</span></div>
+                <div class="fa_item"><i class="fa-solid fa-image"></i><span>image</span></div>
+                <div class="fa_item"><i class="fa-solid fa-file"></i><span>file</span></div>
+            </div>
+        </div>
+
+        <div class="fa_section">
+            <h2><i class="fa-brands fa-github"></i> 品牌图标</h2>
+            <div class="fa_grid">
+                <div class="fa_item"><i class="fa-brands fa-github"></i><span>GitHub</span></div>
+                <div class="fa_item"><i class="fa-brands fa-google"></i><span>Google</span></div>
+                <div class="fa_item"><i class="fa-brands fa-facebook"></i><span>Facebook</span></div>
+                <div class="fa_item"><i class="fa-brands fa-twitter"></i><span>Twitter</span></div>
+                <div class="fa_item"><i class="fa-brands fa-instagram"></i><span>Instagram</span></div>
+                <div class="fa_item"><i class="fa-brands fa-linkedin"></i><span>LinkedIn</span></div>
+                <div class="fa_item"><i class="fa-brands fa-youtube"></i><span>YouTube</span></div>
+                <div class="fa_item"><i class="fa-brands fa-weibo"></i><span>微博</span></div>
+                <div class="fa_item"><i class="fa-brands fa-weixin"></i><span>微信</span></div>
+                <div class="fa_item"><i class="fa-brands fa-qq"></i><span>QQ</span></div>
+                <div class="fa_item"><i class="fa-brands fa-gitlab"></i><span>GitLab</span></div>
+                <div class="fa_item"><i class="fa-brands fa-react"></i><span>React</span></div>
+                <div class="fa_item"><i class="fa-brands fa-vuejs"></i><span>Vue</span></div>
+                <div class="fa_item"><i class="fa-brands fa-node-js"></i><span>Node.js</span></div>
+                <div class="fa_item"><i class="fa-brands fa-python"></i><span>Python</span></div>
+                <div class="fa_item"><i class="fa-brands fa-js"></i><span>JavaScript</span></div>
+            </div>
+        </div>
+
+        <div class="fa_section fa_colors">
+            <h2><i class="fa-solid fa-palette"></i> 自定义颜色</h2>
+            <div class="fa_grid">
+                <div class="fa_item"><i class="fa-solid fa-heart fa-red"></i><span>红色</span></div>
+                <div class="fa_item"><i class="fa-solid fa-thumbs-up fa-blue"></i><span>蓝色</span></div>
+                <div class="fa_item"><i class="fa-solid fa-leaf fa-green"></i><span>绿色</span></div>
+                <div class="fa_item"><i class="fa-solid fa-star fa-yellow"></i><span>黄色</span></div>
+                <div class="fa_item"><i class="fa-solid fa-moon fa-purple"></i><span>紫色</span></div>
+                <div class="fa_item"><i class="fa-solid fa-sun fa-orange"></i><span>橙色</span></div>
+            </div>
+        </div>
+
+        <div class="fa_section fa_sizes">
+            <h2><i class="fa-solid fa-expand"></i> 不同尺寸</h2>
+            <div class="fa_grid">
+                <div class="fa_item"><i class="fa-solid fa-circle fa-xs"></i><span>14px</span></div>
+                <div class="fa_item"><i class="fa-solid fa-circle fa-sm"></i><span>20px</span></div>
+                <div class="fa_item"><i class="fa-solid fa-circle fa-md"></i><span>32px</span></div>
+                <div class="fa_item"><i class="fa-solid fa-circle fa-lg"></i><span>48px</span></div>
+                <div class="fa_item"><i class="fa-solid fa-circle fa-xl"></i><span>64px</span></div>
+            </div>
+        </div>
+
+        <div class="fa_section">
+            <h2><i class="fa-solid fa-spinner"></i> 动画效果</h2>
+            <div class="fa_grid">
+                <div class="fa_item"><i class="fa-solid fa-spinner fa-spin"></i><span>旋转加载</span></div>
+                <div class="fa_item"><i class="fa-solid fa-sync fa-spin"></i><span>同步旋转</span></div>
+                <div class="fa_item"><i class="fa-solid fa-circle-notch fa-spin"></i><span>缺口旋转</span></div>
+                <div class="fa_item"><i class="fa-solid fa-cog fa-spin"></i><span>齿轮旋转</span></div>
+                <div class="fa_item"><i class="fa-solid fa-heart fa-pulse"></i><span>心跳动画</span></div>
+                <div class="fa_item"><i class="fa-solid fa-bell fa-pulse"></i><span>铃铛提醒</span></div>
+            </div>
+        </div>
+
+        <div class="fa_section">
+            <h2><i class="fa-solid fa-wand-magic-sparkles"></i> 实际应用示例</h2>
+            <div class="fa_examples">
+                <button class="fa_example-btn"><i class="fa-solid fa-download"></i> 下载文件</button>
+                <button class="fa_example-btn"><i class="fa-solid fa-cart-shopping"></i> 加入购物车</button>
+                <div class="fa_example-card">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span class="fa-info">这是一条提示信息</span>
+                </div>
+                <div class="fa_badge">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span class="fa_badge-num">3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

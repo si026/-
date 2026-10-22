@@ -1,0 +1,37 @@
+{
+  "id": "5244786",
+  "name": "司雅博1026",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1130592",
+      "name": "应用",
+      "font_class": "yingyong",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "1305047",
+      "name": "网络",
+      "font_class": "wangluo",
+      "unicode": "e62e",
+      "unicode_decimal": 58926
+    },
+    {
+      "icon_id": "5387967",
+      "name": "金币_o",
+      "font_class": "jinbi_o",
+      "unicode": "eba1",
+      "unicode_decimal": 60321
+    },
+    {
+      "icon_id": "7342740",
+      "name": "小程序",
+      "font_class": "xiaochengxu",
+      "unicode": "e63c",
+      "unicode_decimal": 58940
+    }
+  ]
+}

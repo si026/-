@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>移动端底部导航 - 字体图标方式</title>
+    <link rel="stylesheet" href="font/download/font_5244786_2soxe0r4aqo/iconfont.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f2f4f7;
+            color: #303133;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-bar .time { font-size: 15px; }
+        .status-bar .signal { letter-spacing: 2px; }
+
+        .header {
+            background: linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%);
+            padding: 4px 20px 48px;
+            color: #fff;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .header-top h1 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .header-top .iconfont {
+            font-size: 22px;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 0 16px;
+            padding-bottom: 100px;
+        }
+
+        .profile-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-top: -32px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 6px 20px rgba(58,123,213,0.15);
+            margin-bottom: 16px;
+        }
+        .avatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3a7bd5, #3a6073);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .profile-info { flex: 1; }
+        .profile-info .name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .profile-info .desc { font-size: 12px; color: #909399; }
+        .profile-arrow { color: #c0c4cc; font-size: 14px; }
+
+        .stat-row {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 0;
+            display: flex;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: #ebeef5;
+        }
+        .stat-num {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3a7bd5;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #909399;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 20px 4px 12px;
+            color: #303133;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title .more {
+            font-size: 12px;
+            color: #909399;
+            font-weight: normal;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .grid-item:active { background: #f5f7fa; }
+        .grid-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .grid-icon.i1 { background: #ecf5ff; color: #3a7bd5; }
+        .grid-icon.i2 { background: #f0f9eb; color: #67c23a; }
+        .grid-icon.i3 { background: #fdf6ec; color: #e6a23c; }
+        .grid-icon.i4 { background: #fef0f0; color: #f56c6c; }
+        .grid-icon.i5 { background: #f4f4f5; color: #909399; }
+        .grid-icon.i6 { background: #ebf5ff; color: #409eff; }
+        .grid-icon.i7 { background: #fff0f6; color: #eb2f96; }
+        .grid-icon.i8 { background: #f9f0ff; color: #722ed1; }
+        .grid-label {
+            font-size: 12px;
+            color: #606266;
+        }
+
+        .card-list {
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        .card-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            gap: 14px;
+            border-bottom: 1px solid #f2f4f7;
+            cursor: pointer;
+        }
+        .card-item:last-child { border-bottom: none; }
+        .card-item:active { background: #fafbfc; }
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .card-info { flex: 1; min-width: 0; }
+        .card-title {
+            font-size: 14px;
+            color: #303133;
+            margin-bottom: 4px;
+        }
+        .card-desc {
+            font-size: 12px;
+            color: #909399;
+        }
+        .card-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #ecf5ff;
+            color: #3a7bd5;
+        }
+        .card-arrow {
+            color: #c0c4cc;
+            font-size: 14px;
+        }
+
+        .tabbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
+            display: flex;
+            box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
+            border-top: 1px solid #ebeef5;
+            z-index: 999;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            text-decoration: none;
+            gap: 3px;
+        }
+        .tab-item .iconfont {
+            font-size: 24px;
+            color: #909399;
+            transition: color 0.25s ease, transform 0.25s ease;
+            line-height: 1;
+        }
+        .tab-item .tab-label {
+            font-size: 11px;
+            color: #909399;
+            transition: color 0.25s ease;
+        }
+        .tab-item.active .iconfont {
+            color: #3a7bd5;
+            transform: scale(1.05);
+        }
+        .tab-item.active .tab-label {
+            color: #3a7bd5;
+            font-weight: 600;
+        }
+        .tab-item:active .iconfont {
+            transform: scale(0.88);
+        }
+
+        .badge {
+            position: absolute;
+            top: 3px;
+            right: calc(50% - 26px);
+            min-width: 16px;
+            height: 16px;
+            padding: 0 5px;
+            background: #f56c6c;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            box-shadow: 0 0 0 2px #fff;
+            transform-origin: center;
+            transition: transform 0.25s ease;
+        }
+        .badge.badge-dot {
+            min-width: 8px;
+            width: 8px;
+            height: 8px;
+            padding: 0;
+            border-radius: 50%;
+            top: 6px;
+            right: calc(50% - 20px);
+        }
+        .badge.hide {
+            transform: scale(0);
+        }
+
+        .tab-item.tab-active-indicator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 22px;
+            height: 3px;
+            background: linear-gradient(90deg, #3a7bd5, #3a6073);
+            border-radius: 0 0 3px 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="signal">●●●●● ● 🔋</span>
+    </div>
+
+    <div class="header">
+        <div class="header-top">
+            <h1>应用中心</h1>
+            <i class="iconfont icon-wangluo"></i>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="avatar">司</div>
+            <div class="profile-info">
+                <div class="name">司雅博</div>
+                <div class="desc">ID: 5244 · 青铜会员</div>
+            </div>
+            <span class="profile-arrow">›</span>
+        </div>
+
+        <div class="stat-row">
+            <div class="stat-item">
+                <div class="stat-num">128</div>
+                <div class="stat-label">收藏</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">56</div>
+                <div class="stat-label">关注</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">892</div>
+                <div class="stat-label">积分</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">12</div>
+                <div class="stat-label">优惠券</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            常用功能 <span class="more">编辑</span>
+        </div>
+
+        <div class="grid-menu">
+            <div class="grid-item">
+                <div class="grid-icon i1"><i class="iconfont icon-yingyong"></i></div>
+                <span class="grid-label">全部应用</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i2"><i class="iconfont icon-wangluo"></i></div>
+                <span class="grid-label">网络服务</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i3"><i class="iconfont icon-jinbi_o"></i></div>
+                <span class="grid-label">金币商城</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i4"><i class="iconfont icon-xiaochengxu"></i></div>
+                <span class="grid-label">小程序</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i5">🔔</div>
+                <span class="grid-label">消息</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i6">📋</div>
+                <span class="grid-label">订单</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i7">💬</div>
+                <span class="grid-label">客服</span>
+            </div>
+            <div class="grid-item">
+                <div class="grid-icon i8">⚙️</div>
+                <span class="grid-label">设置</span>
+            </div>
+        </div>
+
+        <div class="section-title">
+            推荐活动 <span class="more">查看全部 ›</span>
+        </div>
+
+        <div class="card-list">
+            <div class="card-item">
+                <div class="card-icon" style="background:#ecf5ff;color:#3a7bd5;"><i class="iconfont icon-jinbi_o"></i></div>
+                <div class="card-info">
+                    <div class="card-title">每日签到领金币</div>
+                    <div class="card-desc">连续签到 7 天可领取额外奖励</div>
+                </div>
+                <span class="card-tag">进行中</span>
+                <span class="card-arrow">›</span>
+            </div>
+            <div class="card-item">
+                <div class="card-icon" style="background:#f0f9eb;color:#67c23a;"><i class="iconfont icon-yingyong"></i></div>
+                <div class="card-info">
+                    <div class="card-title">新应用上线</div>
+                    <div class="card-desc">探索更多有趣的小程序和工具</div>
+                </div>
+                <span class="card-tag">NEW</span>
+                <span class="card-arrow">›</span>
+            </div>
+            <div class="card-item">
+                <div class="card-icon" style="background:#fdf6ec;color:#e6a23c;"><i class="iconfont icon-wangluo"></i></div>
+                <div class="card-info">
+                    <div class="card-title">网络加速服务</div>
+                    <div class="card-desc">专享更快更稳定的网络体验</div>
+                </div>
+                <span class="card-arrow">›</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="tabbar">
+        <a class="tab-item active tab-active-indicator" href="javascript:;" data-tab="app">
+            <i class="iconfont icon-yingyong"></i>
+            <span class="tab-label">应用</span>
+        </a>
+        <a class="tab-item" href="javascript:;" data-tab="network">
+            <i class="iconfont icon-wangluo"></i>
+            <span class="tab-label">网络</span>
+            <span class="badge badge-dot"></span>
+        </a>
+        <a class="tab-item" href="javascript:;" data-tab="coin">
+            <i class="iconfont icon-jinbi_o"></i>
+            <span class="tab-label">金币</span>
+            <span class="badge">8</span>
+        </a>
+        <a class="tab-item" href="javascript:;" data-tab="mini">
+            <i class="iconfont icon-xiaochengxu"></i>
+            <span class="tab-label">小程序</span>
+        </a>
+    </nav>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-item');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                tabs.forEach(t => {
+                    t.classList.remove('active', 'tab-active-indicator');
+                });
+                this.classList.add('active', 'tab-active-indicator');
+
+                const badges = this.querySelectorAll('.badge');
+                badges.forEach(b => {
+                    b.classList.add('hide');
+                    setTimeout(() => { b.style.display = 'none'; }, 250);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

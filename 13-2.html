@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucide 图标展示 - SVG 方式</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            padding: 40px 20px;
+            color: #fff;
+        }
+        .lu_header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+        .lu_header h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #4ade80, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .lu_header p {
+            font-size: 16px;
+            color: #aaa;
+        }
+        .lu_container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .lu_section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .lu_section h2 {
+            font-size: 22px;
+            color: #4ade80;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(74, 222, 128, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .lu_grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+        .lu_item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .lu_item:hover {
+            background: rgba(74, 222, 128, 0.1);
+            border-color: #4ade80;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.2);
+        }
+        .lu_item i {
+            width: 36px;
+            height: 36px;
+            stroke: #fff;
+            margin-bottom: 12px;
+            transition: stroke 0.3s ease, transform 0.3s ease;
+        }
+        .lu_item:hover i {
+            stroke: #4ade80;
+            transform: scale(1.15);
+        }
+        .lu_item span {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            word-break: break-all;
+        }
+        .lu_colors .lu_item i.lu-red { stroke: #e94560; }
+        .lu_colors .lu_item i.lu-blue { stroke: #3498db; }
+        .lu_colors .lu_item i.lu-green { stroke: #2ecc71; }
+        .lu_colors .lu_item i.lu-yellow { stroke: #f1c40f; }
+        .lu_colors .lu_item i.lu-purple { stroke: #9b59b6; }
+        .lu_colors .lu_item i.lu-orange { stroke: #e67e22; }
+        .lu_sizes .lu_item i.lu-xs { width: 16px; height: 16px; }
+        .lu_sizes .lu_item i.lu-sm { width: 24px; height: 24px; }
+        .lu_sizes .lu_item i.lu-md { width: 36px; height: 36px; }
+        .lu_sizes .lu_item i.lu-lg { width: 48px; height: 48px; }
+        .lu_sizes .lu_item i.lu-xl { width: 64px; height: 64px; }
+        .lu_stroke-thin i { stroke-width: 1; }
+        .lu_stroke-normal i { stroke-width: 2; }
+        .lu_stroke-thick i { stroke-width: 3; }
+        .lu_anim-spin { animation: lu-spin 2s linear infinite; transform-origin: center; }
+        .lu_anim-pulse { animation: lu-pulse 1.5s ease-in-out infinite; transform-origin: center; }
+        .lu_anim-bounce { animation: lu-bounce 1s ease-in-out infinite; transform-origin: center; }
+        @keyframes lu-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes lu-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        @keyframes lu-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .lu_examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+        .lu_example-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4ade80, #22d3ee);
+            border: none;
+            border-radius: 30px;
+            color: #1a1a2e;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .lu_example-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(74, 222, 128, 0.4);
+        }
+        .lu_example-btn i { width: 18px; height: 18px; stroke: #1a1a2e; }
+        .lu_example-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        .lu_example-card i { width: 24px; height: 24px; stroke: #3498db; }
+        .lu_example-card .lu-info { color: #fff; font-size: 14px; }
+        .lu_avatar-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .lu_avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(74, 222, 128, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #4ade80;
+        }
+        .lu_avatar i { width: 28px; height: 28px; stroke: #4ade80; }
+        .lu_usage {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 13px;
+            color: #22d3ee;
+            overflow-x: auto;
+        }
+        .lu_usage code::before {
+            content: '<i data-lucide="home"></i>';
+        }
+    </style>
+</head>
+<body>
+    <div class="lu_header">
+        <h1 data-lucide="sparkles" style="display:inline-block;width:36px;height:36px;margin-right:10px;stroke:#4ade80;"></i>Lucide 图标库</h1>
+        <p>SVG 图标方式 · 通过 data-lucide 属性或 JS 替换</p>
+    </div>
+
+    <div class="lu_container">
+        <div class="lu_section">
+            <h2 data-lucide="layout-grid"></i> 常用图标</h2>
+            <div class="lu_grid">
+                <div class="lu_item"><i data-lucide="home"></i><span>home</span></div>
+                <div class="lu_item"><i data-lucide="user"></i><span>user</span></div>
+                <div class="lu_item"><i data-lucide="mail"></i><span>mail</span></div>
+                <div class="lu_item"><i data-lucide="phone"></i><span>phone</span></div>
+                <div class="lu_item"><i data-lucide="search"></i><span>search</span></div>
+                <div class="lu_item"><i data-lucide="heart"></i><span>heart</span></div>
+                <div class="lu_item"><i data-lucide="bookmark"></i><span>bookmark</span></div>
+                <div class="lu_item"><i data-lucide="share-2"></i><span>share-2</span></div>
+                <div class="lu_item"><i data-lucide="download"></i><span>download</span></div>
+                <div class="lu_item"><i data-lucide="upload"></i><span>upload</span></div>
+                <div class="lu_item"><i data-lucide="settings"></i><span>settings</span></div>
+                <div class="lu_item"><i data-lucide="bell"></i><span>bell</span></div>
+                <div class="lu_item"><i data-lucide="calendar"></i><span>calendar</span></div>
+                <div class="lu_item"><i data-lucide="clock"></i><span>clock</span></div>
+                <div class="lu_item"><i data-lucide="map-pin"></i><span>map-pin</span></div>
+                <div class="lu_item"><i data-lucide="camera"></i><span>camera</span></div>
+                <div class="lu_item"><i data-lucide="music"></i><span>music</span></div>
+                <div class="lu_item"><i data-lucide="video"></i><span>video</span></div>
+                <div class="lu_item"><i data-lucide="image"></i><span>image</span></div>
+                <div class="lu_item"><i data-lucide="file"></i><span>file</span></div>
+            </div>
+        </div>
+
+        <div class="lu_section">
+            <h2 data-lucide="arrow-right-left"></i> 方向与导航</h2>
+            <div class="lu_grid">
+                <div class="lu_item"><i data-lucide="arrow-up"></i><span>arrow-up</span></div>
+                <div class="lu_item"><i data-lucide="arrow-down"></i><span>arrow-down</span></div>
+                <div class="lu_item"><i data-lucide="arrow-left"></i><span>arrow-left</span></div>
+                <div class="lu_item"><i data-lucide="arrow-right"></i><span>arrow-right</span></div>
+                <div class="lu_item"><i data-lucide="chevron-up"></i><span>chevron-up</span></div>
+                <div class="lu_item"><i data-lucide="chevron-down"></i><span>chevron-down</span></div>
+                <div class="lu_item"><i data-lucide="menu"></i><span>menu</span></div>
+                <div class="lu_item"><i data-lucide="x"></i><span>x / close</span></div>
+                <div class="lu_item"><i data-lucide="plus"></i><span>plus</span></div>
+                <div class="lu_item"><i data-lucide="minus"></i><span>minus</span></div>
+                <div class="lu_item"><i data-lucide="check"></i><span>check</span></div>
+                <div class="lu_item"><i data-lucide="more-horizontal"></i><span>more-horizontal</span></div>
+            </div>
+        </div>
+
+        <div class="lu_section lu_colors">
+            <h2 data-lucide="palette"></i> 自定义颜色</h2>
+            <div class="lu_grid">
+                <div class="lu_item"><i data-lucide="heart" class="lu-red"></i><span>红色</span></div>
+                <div class="lu_item"><i data-lucide="thumbs-up" class="lu-blue"></i><span>蓝色</span></div>
+                <div class="lu_item"><i data-lucide="leaf" class="lu-green"></i><span>绿色</span></div>
+                <div class="lu_item"><i data-lucide="star" class="lu-yellow"></i><span>黄色</span></div>
+                <div class="lu_item"><i data-lucide="moon" class="lu-purple"></i><span>紫色</span></div>
+                <div class="lu_item"><i data-lucide="sun" class="lu-orange"></i><span>橙色</span></div>
+            </div>
+        </div>
+
+        <div class="lu_section lu_sizes">
+            <h2 data-lucide="maximize-2"></i> 不同尺寸</h2>
+            <div class="lu_grid">
+                <div class="lu_item"><i data-lucide="circle" class="lu-xs"></i><span>16px</span></div>
+                <div class="lu_item"><i data-lucide="circle" class="lu-sm"></i><span>24px</span></div>
+                <div class="lu_item"><i data-lucide="circle" class="lu-md"></i><span>36px</span></div>
+                <div class="lu_item"><i data-lucide="circle" class="lu-lg"></i><span>48px</span></div>
+                <div class="lu_item"><i data-lucide="circle" class="lu-xl"></i><span>64px</span></div>
+            </div>
+        </div>
+
+        <div class="lu_section">
+            <h2 data-lucide="pen-tool"></i> 线条粗细</h2>
+            <div style="display:flex;flex-wrap:wrap;gap:40px;justify-content:center;">
+                <div class="lu_item lu_stroke-thin" style="min-width:140px;">
+                    <i data-lucide="zap"></i><span>细线条 (1px)</span>
+                </div>
+                <div class="lu_item lu_stroke-normal" style="min-width:140px;">
+                    <i data-lucide="zap"></i><span>正常 (2px)</span>
+                </div>
+                <div class="lu_item lu_stroke-thick" style="min-width:140px;">
+                    <i data-lucide="zap"></i><span>粗线条 (3px)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lu_section">
+            <h2 data-lucide="flask-conical"></i> CSS 动画效果</h2>
+            <div class="lu_grid">
+                <div class="lu_item"><i data-lucide="loader-2" class="lu_anim-spin"></i><span>旋转加载</span></div>
+                <div class="lu_item"><i data-lucide="refresh-cw" class="lu_anim-spin"></i><span>刷新旋转</span></div>
+                <div class="lu_item"><i data-lucide="heart" class="lu_anim-pulse"></i><span>心跳动画</span></div>
+                <div class="lu_item"><i data-lucide="bell" class="lu_anim-bounce"></i><span>弹跳提醒</span></div>
+                <div class="lu_item"><i data-lucide="loader" class="lu_anim-spin"></i><span>加载器</span></div>
+                <div class="lu_item"><i data-lucide="activity" class="lu_anim-pulse"></i><span>活动脉冲</span></div>
+            </div>
+        </div>
+
+        <div class="lu_section">
+            <h2 data-lucide="wand-2"></i> 实际应用示例</h2>
+            <div class="lu_examples">
+                <button class="lu_example-btn"><i data-lucide="download"></i> 下载文件</button>
+                <button class="lu_example-btn"><i data-lucide="shopping-cart"></i> 加入购物车</button>
+                <div class="lu_example-card">
+                    <i data-lucide="info"></i>
+                    <span class="lu-info">这是一条提示信息</span>
+                </div>
+                <div class="lu_avatar-group">
+                    <div class="lu_avatar"><i data-lucide="user"></i></div>
+                    <div class="lu_avatar"><i data-lucide="crown"></i></div>
+                </div>
+            </div>
+            <div class="lu_usage">
+                <span style="color:#4ade80;">HTML 写法：</span>
+                <code style="color:#fff;">&lt;i data-lucide="home"&gt;&lt;/i&gt;</code>
+                <br>
+                <span style="color:#4ade80;">JS 初始化：</span>
+                <code style="color:#fff;">lucide.createIcons();</code>
+            </div>
+        </div>
+    </div>
+
+    <script src="cdn/lucide.min.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

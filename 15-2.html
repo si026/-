@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.10.26
+使用的大模型：GLM
+功能名称：JavaScript 程序结构演示（条件与循环）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 程序结构：条件与循环</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+        .syb_section_title {
+            max-width: 1020px;
+            margin: 26px auto 14px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .syb_badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .syb_cards_two { grid-template-columns: repeat(2, 1fr); }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; }
+        .syb_codeblock {
+            background: #fdecea;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #c0392b;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .syb_result_row { margin-top: 12px; font-size: 14px; line-height: 1.7; }
+        .syb_result {
+            color: #2980b9;
+            font-family: Consolas, "Courier New", monospace;
+            font-weight: bold;
+        }
+        .syb_desc {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        /* 九九乘法表 */
+        .syb_table_wrap { margin-top: 12px; }
+        .syb_table_row { display: flex; gap: 6px; margin-bottom: 6px; }
+        .syb_cell {
+            background: #eaf4fc;
+            color: #2471a3;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+        }
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_cards, .syb_cards_two { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 程序结构：条件与循环</h1>
+        <p>程序三大结构：顺序、条件（分支）、循环 —— 本页演示条件与循环，所有结果均由页面内的真实代码实时计算</p>
+    </div>
+
+    <!-- ==================== 条件结构 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">A</span>条件结构（分支）</div>
+    <div class="syb_cards">
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">1</span><strong>if...else if...else</strong></div>
+            <div class="syb_codeblock">var syb_score = 85;
+if (syb_score &gt;= 90) {
+    syb_grade = "优秀";
+} else if (syb_score &gt;= 80) {
+    syb_grade = "良好";
+} else if (syb_score &gt;= 60) {
+    syb_grade = "及格";
+} else {
+    syb_grade = "不及格";
+}</div>
+            <div class="syb_result_row">运行结果：85 分 → <span class="syb_result" id="syb_r_grade"></span></div>
+            <div class="syb_desc">从上往下依次判断，哪个条件先满足就执行哪个分支，都不满足走 else。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">2</span><strong>switch...case</strong></div>
+            <div class="syb_codeblock">var syb_day = new Date().getDay();
+switch (syb_day) {
+    case 0: syb_dayName = "星期日"; break;
+    case 1: syb_dayName = "星期一"; break;
+    ...
+    default: syb_dayName = "无效";
+}</div>
+            <div class="syb_result_row">运行结果：今天是 <span class="syb_result" id="syb_r_day"></span></div>
+            <div class="syb_desc">适合对一个值的多种取值分别处理；break 用于跳出，不写会继续执行下一个 case。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">3</span><strong>三元运算符 ? :</strong></div>
+            <div class="syb_codeblock">var syb_num = 7;
+var syb_oddEven =
+    syb_num % 2 === 0 ? "偶数" : "奇数";</div>
+            <div class="syb_result_row">运行结果：7 → <span class="syb_result" id="syb_r_odd"></span></div>
+            <div class="syb_desc">条件 ? 值1 : 值2 —— 简化版 if...else，适合二选一的赋值。</div>
+        </div>
+    </div>
+
+    <!-- ==================== 循环结构 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">B</span>循环结构</div>
+    <div class="syb_cards syb_cards_two">
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">4</span><strong>for 循环（1~100 求和）</strong></div>
+            <div class="syb_codeblock">var syb_sum = 0;
+for (var syb_i = 1; syb_i &lt;= 100; syb_i++) {
+    syb_sum += syb_i;
+}</div>
+            <div class="syb_result_row">运行结果：1+2+...+100 = <span class="syb_result" id="syb_r_sum"></span></div>
+            <div class="syb_desc">初始化、条件、步长写在一行里，适合已知次数的循环。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">5</span><strong>while 循环（翻倍到超过 100）</strong></div>
+            <div class="syb_codeblock">var syb_value = 1, syb_times = 0;
+while (syb_value &lt;= 100) {
+    syb_value *= 2;
+    syb_times++;
+}</div>
+            <div class="syb_result_row">运行结果：翻倍 <span class="syb_result" id="syb_r_times"></span> 次后 syb_value = <span class="syb_result" id="syb_r_value"></span></div>
+            <div class="syb_desc">先判断条件再执行；适合事先不知道循环次数的场景。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">6</span><strong>do...while 循环（至少执行一次）</strong></div>
+            <div class="syb_codeblock">var syb_j = 10;
+do {
+    syb_doResult = syb_j;
+    syb_j++;
+} while (syb_j &lt; 10);</div>
+            <div class="syb_result_row">运行结果：条件一开始就不满足，仍执行 1 次，syb_j = <span class="syb_result" id="syb_r_do"></span></div>
+            <div class="syb_desc">先执行一次再判断条件，循环体至少会运行一次。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">7</span><strong>break 与 continue</strong></div>
+            <div class="syb_codeblock">for (var syb_k = 1; syb_k &lt;= 10; syb_k++) {
+    if (syb_k === 8) { break; }
+    if (syb_k % 3 === 0) { continue; }
+    syb_bcResult += syb_k + " ";
+}</div>
+            <div class="syb_result_row">运行结果：遇到 8 停止、跳过 3 的倍数 → <span class="syb_result" id="syb_r_bc"></span></div>
+            <div class="syb_desc">break 直接跳出整个循环；continue 跳过本次进入下一次。</div>
+        </div>
+    </div>
+
+    <!-- ==================== 嵌套循环 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">C</span>嵌套循环（九九乘法表）</div>
+    <div class="syb_cards">
+        <div class="syb_card">
+            <div class="syb_codeblock">for (var syb_row = 1; syb_row &lt;= 9; syb_row++) {
+    for (var syb_col = 1; syb_col &lt;= syb_row; syb_col++) {
+        // 输出 syb_col × syb_row = 乘积
+    }
+}</div>
+            <div class="syb_table_wrap" id="syb_table"></div>
+            <div class="syb_desc">外层循环控制行，内层循环控制列，内层条件是 syb_col &lt;= syb_row，所以呈现三角形。</div>
+        </div>
+    </div>
+
+    <div class="syb_note">
+        总结：顺序结构是默认的从上往下执行；条件结构（if...else、switch、三元运算符）让程序学会"选择"；
+        循环结构（for、while、do...while + break/continue）让程序学会"重复"。
+        三者组合起来就能表达任何逻辑。
+    </div>
+
+    <script>
+        // ==================== 条件结构 ====================
+        //1.if...else if...else：成绩等级
+        var syb_score = 85;
+        var syb_grade = "";
+        if (syb_score >= 90) {
+            syb_grade = "优秀";
+        } else if (syb_score >= 80) {
+            syb_grade = "良好";
+        } else if (syb_score >= 60) {
+            syb_grade = "及格";
+        } else {
+            syb_grade = "不及格";
+        }
+        document.getElementById("syb_r_grade").innerHTML = syb_grade;
+
+        //2.switch：今天星期几
+        var syb_day = new Date().getDay();
+        var syb_dayName = "";
+        switch (syb_day) {
+            case 0: syb_dayName = "星期日"; break;
+            case 1: syb_dayName = "星期一"; break;
+            case 2: syb_dayName = "星期二"; break;
+            case 3: syb_dayName = "星期三"; break;
+            case 4: syb_dayName = "星期四"; break;
+            case 5: syb_dayName = "星期五"; break;
+            case 6: syb_dayName = "星期六"; break;
+            default: syb_dayName = "无效";
+        }
+        document.getElementById("syb_r_day").innerHTML = syb_dayName;
+
+        //3.三元运算符：奇偶判断
+        var syb_num = 7;
+        var syb_oddEven = syb_num % 2 === 0 ? "偶数" : "奇数";
+        document.getElementById("syb_r_odd").innerHTML = syb_oddEven;
+
+        // ==================== 循环结构 ====================
+        //4.for：1~100 求和
+        var syb_sum = 0;
+        for (var syb_i = 1; syb_i <= 100; syb_i++) {
+            syb_sum += syb_i;
+        }
+        document.getElementById("syb_r_sum").innerHTML = syb_sum;
+
+        //5.while：翻倍直到超过 100
+        var syb_value = 1;
+        var syb_times = 0;
+        while (syb_value <= 100) {
+            syb_value *= 2;
+            syb_times++;
+        }
+        document.getElementById("syb_r_times").innerHTML = syb_times;
+        document.getElementById("syb_r_value").innerHTML = syb_value;
+
+        //6.do...while：至少执行一次
+        var syb_j = 10;
+        var syb_doResult = "";
+        do {
+            syb_doResult = syb_j;
+            syb_j++;
+        } while (syb_j < 10);
+        document.getElementById("syb_r_do").innerHTML = syb_j;
+
+        //7.break 与 continue
+        var syb_bcResult = "";
+        for (var syb_k = 1; syb_k <= 10; syb_k++) {
+            if (syb_k === 8) { break; }
+            if (syb_k % 3 === 0) { continue; }
+            syb_bcResult += syb_k + " ";
+        }
+        document.getElementById("syb_r_bc").innerHTML = syb_bcResult;
+
+        //8.嵌套循环：九九乘法表
+        var syb_table = "";
+        for (var syb_row = 1; syb_row <= 9; syb_row++) {
+            syb_table += '<div class="syb_table_row">';
+            for (var syb_col = 1; syb_col <= syb_row; syb_col++) {
+                syb_table += '<span class="syb_cell">' + syb_col + '×' + syb_row + '=' + (syb_row * syb_col) + '</span>';
+            }
+            syb_table += '</div>';
+        }
+        document.getElementById("syb_table").innerHTML = syb_table;
+    </script>
+</body>
+</html>

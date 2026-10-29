@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.10.29
+使用的大模型：CodeBuddy Auto
+功能名称：二手车平台页面板块（常见问题 / 免费估价 / 卖车流程）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 二手车卖车页面板块</title>
+    <!-- 本地 iconfont 图标（font 目录） -->
+    <link rel="stylesheet" href="font/download/font_5244786_pxfjas306hj/iconfont.css">
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #fff;
+            color: #333;
+            padding: 40px 24px 60px;
+        }
+        .syb_container { max-width: 1080px; margin: 0 auto; }
+        .syb_h2 { font-size: 20px; color: #111; margin-bottom: 20px; }
+
+        /* ==================== 一、常见问题 ==================== */
+        .syb_faq_grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .syb_faq_card {
+            border: 1px solid #ececec;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .syb_faq_head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+        }
+        .syb_faq_green  { background: linear-gradient(90deg, #e6f7ec, #f2fbf5); }
+        .syb_faq_orange { background: linear-gradient(90deg, #fdf0e3, #fef8f0); }
+        .syb_faq_blue   { background: linear-gradient(90deg, #e7f5f2, #f1faf7); }
+        .syb_faq_icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_icon_green  { background: #21b356; }
+        .syb_icon_orange { background: #ff8f1f; }
+        .syb_icon_teal   { background: #14b8a0; }
+
+        .syb_faq_list { list-style: none; padding: 4px 16px 0; }
+        .syb_faq_item { border-bottom: 1px solid #f4f4f4; }
+        .syb_faq_q {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px 0;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+        .syb_faq_q:hover { color: #21b356; }
+        .syb_chev {
+            width: 8px;
+            height: 8px;
+            border-right: 1.5px solid #bbb;
+            border-bottom: 1.5px solid #bbb;
+            transform: rotate(45deg);
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
+            margin-right: 3px;
+        }
+        .syb_faq_item.syb_open .syb_chev { transform: rotate(225deg); }
+        .syb_faq_a {
+            display: none;
+            padding: 0 24px 14px 0;
+            font-size: 13px;
+            color: #8a8a8a;
+            line-height: 1.7;
+        }
+        .syb_faq_item.syb_open .syb_faq_a { display: block; }
+        .syb_faq_more { display: none; }
+        .syb_faq_card.syb_expanded .syb_faq_more { display: block; }
+
+        .syb_faq_toggle {
+            display: block;
+            width: 100%;
+            border: none;
+            background: none;
+            padding: 12px 0 14px;
+            font-size: 13px;
+            color: #9a9a9a;
+            cursor: pointer;
+            text-align: center;
+        }
+        .syb_faq_toggle:hover { color: #21b356; }
+        .syb_faq_toggle .syb_chev { display: inline-block; margin-left: 6px; vertical-align: 1px; }
+        .syb_faq_card.syb_expanded .syb_faq_toggle .syb_chev { transform: rotate(225deg); }
+
+        /* ==================== 二、免费估价 ==================== */
+        .syb_estimate {
+            margin-top: 44px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+        .syb_est_bar {
+            position: relative;
+            background:
+                repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 18px, rgba(255,255,255,0) 18px 36px),
+                linear-gradient(90deg, #0c7c3c 0%, #17924a 60%, #1ca352 100%);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+        }
+        .syb_est_title { color: #fff; font-size: 20px; font-weight: bold; }
+        .syb_est_sub { color: rgba(255, 255, 255, 0.72); font-size: 13px; margin-left: 14px; }
+        .syb_est_logo {
+            position: absolute;
+            right: 26px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .syb_est_logo .iconfont { color: #17924a; font-size: 26px; }
+        .syb_est_body { background: #fff; padding: 22px 24px 26px; }
+        .syb_est_fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .syb_field_label { font-size: 14px; font-weight: bold; color: #222; margin-bottom: 10px; display: block; }
+        .syb_field_label em { color: #ff4d4f; font-style: normal; margin-left: 2px; }
+        .syb_field_box { position: relative; display: flex; align-items: center; }
+        .syb_field_box select,
+        .syb_field_box input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #dcdfe4;
+            border-radius: 6px;
+            background: #fff;
+            padding: 0 34px 0 12px;
+            font-size: 14px;
+            color: #333;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            font-family: inherit;
+        }
+        .syb_field_box select:focus,
+        .syb_field_box input:focus { border-color: #21b356; }
+        .syb_field_box.syb_error select,
+        .syb_field_box.syb_error input { border-color: #ff4d4f; }
+        .syb_select_arrow {
+            position: absolute;
+            right: 12px;
+            width: 8px;
+            height: 8px;
+            border-right: 1.5px solid #999;
+            border-bottom: 1.5px solid #999;
+            transform: rotate(45deg) translateY(-2px);
+            pointer-events: none;
+        }
+        .syb_unit { position: absolute; right: 12px; font-size: 13px; color: #666; pointer-events: none; }
+        .syb_est_btn_wrap { text-align: center; margin-top: 24px; }
+        .syb_est_btn {
+            border: none;
+            cursor: pointer;
+            min-width: 190px;
+            height: 46px;
+            border-radius: 23px;
+            background: linear-gradient(90deg, #16a34a, #21b356);
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: inherit;
+            letter-spacing: 2px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .syb_est_btn:hover { box-shadow: 0 6px 16px rgba(33, 179, 86, 0.4); transform: translateY(-2px); }
+        .syb_est_btn .syb_btn_arrow {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid #fff;
+            border-top: 2px solid #fff;
+            transform: rotate(45deg);
+            margin-left: 8px;
+            vertical-align: 2px;
+        }
+        .syb_est_result {
+            display: none;
+            margin: 18px auto 0;
+            max-width: 560px;
+            background: #effaf3;
+            border: 1px solid #bfe8cd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #1d7a40;
+            text-align: center;
+            line-height: 1.7;
+        }
+        .syb_est_result.syb_show { display: block; }
+        .syb_est_result strong { font-size: 18px; color: #16a34a; font-family: Consolas, "Courier New", monospace; }
+        .syb_est_result.syb_warn { background: #fef2f2; border-color: #f5c2c2; color: #d94545; }
+
+        /* ==================== 三、卖车流程 ==================== */
+        .syb_flow { margin-top: 44px; }
+        .syb_flow_row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        .syb_step { text-align: center; flex: 1; }
+        .syb_step_num {
+            font-size: 58px;
+            line-height: 1;
+            font-weight: 800;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            background: linear-gradient(180deg, #35b96e 8%, #d7f0e0 92%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .syb_step_name { margin-top: 6px; font-size: 15px; font-weight: bold; color: #222; }
+        .syb_flow_arrow {
+            width: 0;
+            height: 0;
+            border-left: 11px solid #d9d9d9;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            margin-top: 24px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 800px) {
+            .syb_faq_grid, .syb_est_fields { grid-template-columns: 1fr; }
+            .syb_est_sub { display: block; margin: 6px 0 0; }
+            .syb_flow_arrow { display: none; }
+            .syb_step_num { font-size: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_container">
+
+        <!-- ==================== 一、常见问题 ==================== -->
+        <h2 class="syb_h2">常见问题</h2>
+        <div class="syb_faq_grid">
+            <!-- 卖车问题 -->
+            <div class="syb_faq_card" id="syb_faq_1">
+                <div class="syb_faq_head syb_faq_green">
+                    <span class="syb_faq_icon syb_icon_green"><span class="iconfont icon-che"></span></span>卖车问题
+                </div>
+                <ul class="syb_faq_list">
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">我的车能卖多少钱?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">提交车辆信息后，系统结合真实成交大数据给出预估价，上门检测后确定最终成交价。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">我的车卖给谁?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">车辆检测上架后，由平台买家竞拍出价，价高者得，谁出价高就卖给谁。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">大概多久可以售出?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">一般 3~7 天即可成交，具体视车型与当地行情而定。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车要收取费用吗?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">车主全程 0 费用，检测、上架、过户均不收费，平台向买家收取服务费。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">上门验车需要多长时间?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">上门检测约 30 分钟，预约时间由您决定，不影响正常用车。</div>
+                    </li>
+                </ul>
+                <button class="syb_faq_toggle" onclick="syb_toggleMore(this)">展开<span class="syb_chev"></span></button>
+            </div>
+
+            <!-- 交易流程 -->
+            <div class="syb_faq_card" id="syb_faq_2">
+                <div class="syb_faq_head syb_faq_orange">
+                    <span class="syb_faq_icon syb_icon_orange"><span class="iconfont icon-jinbi_o"></span></span>交易流程
+                </div>
+                <ul class="syb_faq_list">
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车都有哪些流程?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">预约检测 → 免费上架 → 等待出价 → 收款交车，四步完成卖车。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车我需要准备什么材料?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">车主身份证、车辆登记证书（大绿本）、行驶证，购车发票有则携带。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">如何取消/修改验车时间/地址?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">在订单详情页点击"改期/取消"，或联系您的专属顾问修改。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车后多久能拿到钱?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">过户完成后当天放款，最快 2 小时到账。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">车辆还有贷款没还完能卖吗?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">可以。先结清贷款解除抵押即可交易，平台也可协助办理解押手续。</div>
+                    </li>
+                </ul>
+                <button class="syb_faq_toggle" onclick="syb_toggleMore(this)">展开<span class="syb_chev"></span></button>
+            </div>
+
+            <!-- 过户相关 -->
+            <div class="syb_faq_card" id="syb_faq_3">
+                <div class="syb_faq_head syb_faq_blue">
+                    <span class="syb_faq_icon syb_icon_teal"><span class="iconfont icon-fangxiangpan"></span></span>过户相关
+                </div>
+                <ul class="syb_faq_list">
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">车辆过户需要多长时间? 如何查看过户进度?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">一般 1~3 个工作日完成过户，进度可在订单详情页实时查看。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">车辆的车牌、指标等过户政策在哪里可以了解?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">各地车管所政策不同，可在订单页查看当地指标政策说明，或咨询顾问。</div>
+                    </li>
+                    <li class="syb_faq_item" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车后没有在约定时间过户怎么办?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">超时系统会自动提醒买家，您也可联系客服介入处理，保障您的权益。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">卖车后购车指标多久能更新?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">过户完成后指标自动更新，一般 3 个工作日内可在指标系统查询到。</div>
+                    </li>
+                    <li class="syb_faq_item syb_faq_more" onclick="syb_toggleItem(this)">
+                        <div class="syb_faq_q">外地车牌的车可以在平台卖吗?<span class="syb_chev"></span></div>
+                        <div class="syb_faq_a">可以，平台支持全国提档过户，跨城市卖车同样适用。</div>
+                    </li>
+                </ul>
+                <button class="syb_faq_toggle" onclick="syb_toggleMore(this)">展开<span class="syb_chev"></span></button>
+            </div>
+        </div>
+
+        <!-- ==================== 二、免费估价 ==================== -->
+        <div class="syb_estimate">
+            <div class="syb_est_bar">
+                <div>
+                    <span class="syb_est_title">测测您的爱车能卖多少钱</span>
+                    <span class="syb_est_sub">基于瓜子真实交易大数据的实时行情预测</span>
+                </div>
+                <span class="syb_est_logo"><span class="iconfont icon-dui"></span></span>
+            </div>
+            <div class="syb_est_body">
+                <div class="syb_est_fields">
+                    <div>
+                        <label class="syb_field_label">品牌车型<em>*</em></label>
+                        <div class="syb_field_box" id="syb_box_brand">
+                            <select id="syb_brand">
+                                <option value="">请选择品牌和车型</option>
+                                <option value="8">大众 · 迈腾</option>
+                                <option value="9">丰田 · 凯美瑞</option>
+                                <option value="10">本田 · 雅阁</option>
+                                <option value="20">奥迪 · A4L</option>
+                                <option value="26">宝马 · 3系</option>
+                                <option value="32">奔驰 · C级</option>
+                            </select>
+                            <span class="syb_select_arrow"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="syb_field_label">行驶里程<em>*</em></label>
+                        <div class="syb_field_box" id="syb_box_mile">
+                            <input type="number" id="syb_mile" placeholder="请填写行驶里程" min="0" step="0.1">
+                            <span class="syb_unit">万公里</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="syb_field_label">所在城市<em>*</em></label>
+                        <div class="syb_field_box" id="syb_box_city">
+                            <select id="syb_city">
+                                <option value="">各城市售卖价格有差异，精准选择多卖钱</option>
+                                <option value="1.08">北京</option>
+                                <option value="1.05">上海</option>
+                                <option value="1.05">深圳</option>
+                                <option value="1.0">杭州</option>
+                                <option value="0.98">广州</option>
+                                <option value="0.95">成都</option>
+                            </select>
+                            <span class="syb_select_arrow"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="syb_est_btn_wrap">
+                    <button class="syb_est_btn" onclick="syb_estimate()">先估价<span class="syb_btn_arrow"></span></button>
+                    <div class="syb_est_result" id="syb_result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 三、卖车流程 ==================== -->
+        <div class="syb_flow">
+            <h2 class="syb_h2">卖车流程</h2>
+            <div class="syb_flow_row">
+                <div class="syb_step">
+                    <div class="syb_step_num">01</div>
+                    <div class="syb_step_name">预约检测</div>
+                </div>
+                <span class="syb_flow_arrow"></span>
+                <div class="syb_step">
+                    <div class="syb_step_num">02</div>
+                    <div class="syb_step_name">免费上架</div>
+                </div>
+                <span class="syb_flow_arrow"></span>
+                <div class="syb_step">
+                    <div class="syb_step_num">03</div>
+                    <div class="syb_step_name">等待出价</div>
+                </div>
+                <span class="syb_flow_arrow"></span>
+                <div class="syb_step">
+                    <div class="syb_step_num">04</div>
+                    <div class="syb_step_name">收款交车</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1.FAQ：点击问题展开 / 收起答案
+        function syb_toggleItem(syb_item) {
+            syb_item.className = syb_item.className.indexOf("syb_open") >= 0
+                ? syb_item.className.replace(" syb_open", "").replace("syb_open", "")
+                : syb_item.className + " syb_open";
+        }
+
+        // 2.FAQ：展开 / 收起更多问题
+        function syb_toggleMore(syb_btn) {
+            var syb_card = syb_btn.parentNode;
+            var syb_expanded = syb_card.className.indexOf("syb_expanded") >= 0;
+            if (syb_expanded) {
+                syb_card.className = syb_card.className.replace(" syb_expanded", "").replace("syb_expanded", "");
+                syb_btn.innerHTML = '展开<span class="syb_chev"></span>';
+            } else {
+                syb_card.className += " syb_expanded";
+                syb_btn.innerHTML = '收起<span class="syb_chev"></span>';
+            }
+        }
+
+        // 3.估价：校验必填项并按品牌价、里程折旧、城市系数估算
+        function syb_estimate() {
+            var syb_brand = document.getElementById("syb_brand");
+            var syb_mile = document.getElementById("syb_mile");
+            var syb_city = document.getElementById("syb_city");
+            var syb_boxBrand = document.getElementById("syb_box_brand");
+            var syb_boxMile = document.getElementById("syb_box_mile");
+            var syb_boxCity = document.getElementById("syb_box_city");
+            var syb_out = document.getElementById("syb_result");
+
+            var syb_ok = true;
+            // 依次校验三个必填项，未填的红框提示
+            syb_boxBrand.className = syb_boxBrand.className.replace(" syb_error", "").replace("syb_error", "");
+            syb_boxMile.className = syb_boxMile.className.replace(" syb_error", "").replace("syb_error", "");
+            syb_boxCity.className = syb_boxCity.className.replace(" syb_error", "").replace("syb_error", "");
+            if (syb_brand.value === "") { syb_boxBrand.className += " syb_error"; syb_ok = false; }
+            if (syb_mile.value === "" || Number(syb_mile.value) < 0) { syb_boxMile.className += " syb_error"; syb_ok = false; }
+            if (syb_city.value === "") { syb_boxCity.className += " syb_error"; syb_ok = false; }
+
+            syb_out.className = "syb_est_result";
+            if (!syb_ok) {
+                syb_out.className += " syb_warn";
+                syb_out.innerHTML = "请先完善带 <strong>*</strong> 的必填项，再点击估价哦～";
+                return;
+            }
+
+            // 预估逻辑：新车指导价 × 城市系数 ×（1 - 里程折旧率），折旧封顶 65%
+            var syb_base = Number(syb_brand.value);
+            var syb_mileVal = Number(syb_mile.value);
+            var syb_cityFactor = Number(syb_city.value);
+            var syb_depre = Math.min(0.65, syb_mileVal * 0.055);
+            var syb_mid = syb_base * syb_cityFactor * (1 - syb_depre);
+            var syb_low = (syb_mid * 0.92).toFixed(1);
+            var syb_high = (syb_mid * 1.08).toFixed(1);
+
+            syb_out.className += " syb_show";
+            syb_out.innerHTML = "您的爱车预估成交价为 <strong>" + syb_low + " 万 ~ " + syb_high +
+                " 万</strong><br>最终价格以上门检测后的实际车况为准";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.10.29
+使用的大模型：CodeBuddy Auto
+功能名称：股票行情排行榜（沪深/沪跌/深涨/深跌切换 + 点击个股跳转详情页）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 股票行情排行榜与详情跳转</title>
+    <!-- 本地 iconfont 图标（font 目录） -->
+    <link rel="stylesheet" href="font/download/font_5244786_pxfjas306hj/iconfont.css">
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 50px 24px;
+        }
+        .syb_num { font-family: Consolas, "Courier New", monospace; }
+        .syb_up { color: #e0342f; }
+        .syb_down { color: #12a05f; }
+
+        /* ==================== 排行榜卡片 ==================== */
+        .syb_board {
+            max-width: 420px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #ececec;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+        .syb_tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+        }
+        .syb_tab {
+            flex: 1;
+            text-align: center;
+            padding: 11px 0;
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .syb_tab:hover { color: #16a34a; }
+        .syb_tab.syb_active {
+            background: #2eb872;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .syb_head,
+        .syb_row {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        .syb_head { color: #999; font-size: 12px; padding-top: 12px; padding-bottom: 4px; }
+        .syb_head span:nth-child(1) { flex: 1.4; }
+        .syb_head span:nth-child(2) { flex: 1; text-align: right; }
+        .syb_head span:nth-child(3) { flex: 1; text-align: right; }
+        .syb_head span:nth-child(4) { flex: 1.1; text-align: right; }
+
+        /* 每一行都是一个 <a>，点击即跳转到个股详情 */
+        .syb_row {
+            text-decoration: none;
+            color: #333;
+            border-top: 1px solid #f5f5f5;
+            transition: background 0.15s;
+        }
+        .syb_row:first-of-type { border-top: none; }
+        .syb_row:hover { background: #f3faf6; }
+        .syb_row .syb_name { flex: 1.4; font-weight: bold; color: #222; }
+        .syb_row .syb_name i { font-style: normal; color: #999; font-weight: normal; margin-right: 4px; }
+        .syb_row .syb_price { flex: 1; text-align: right; }
+        .syb_row .syb_chg { flex: 1; text-align: right; }
+        .syb_row .syb_pct { flex: 1.1; text-align: right; }
+
+        .syb_tip {
+            max-width: 420px;
+            margin: 14px auto 0;
+            font-size: 12px;
+            color: #b0b0b0;
+            text-align: center;
+        }
+
+        /* ==================== 个股详情（跳转目标） ==================== */
+        .syb_detail {
+            display: none;
+            max-width: 420px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #ececec;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+        .syb_detail.syb_show { display: block; }
+        .syb_board.syb_hide { display: none; }
+        .syb_tip.syb_hide { display: none; }
+
+        .syb_d_bar {
+            background: linear-gradient(90deg, #0c7c3c, #1ca352);
+            color: #fff;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .syb_d_bar .iconfont { font-size: 18px; }
+        .syb_d_body { padding: 18px; }
+        .syb_d_top { display: flex; align-items: baseline; gap: 10px; }
+        .syb_d_name { font-size: 20px; font-weight: bold; color: #222; }
+        .syb_d_code { font-size: 12px; color: #999; }
+        .syb_d_price { font-size: 34px; font-weight: bold; margin-top: 6px; }
+        .syb_d_chg { font-size: 15px; font-weight: bold; margin-top: 4px; }
+        .syb_d_grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px 18px;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed #eee;
+            font-size: 13px;
+        }
+        .syb_d_grid div { display: flex; justify-content: space-between; }
+        .syb_d_grid b { font-weight: normal; color: #999; }
+        .syb_d_note {
+            margin-top: 14px;
+            background: #fff9e6;
+            border-left: 3px solid #f0b429;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #8a6d1a;
+            line-height: 1.6;
+        }
+        .syb_back {
+            display: block;
+            text-align: center;
+            padding: 12px 0;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+            color: #16a34a;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .syb_back:hover { background: #f0faf4; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ 排行榜（列表视图） ============ -->
+    <div class="syb_board" id="syb_board">
+        <div class="syb_tabs" id="syb_tabs"></div>
+        <div class="syb_head">
+            <span>名称</span><span>最新价</span><span>涨跌额</span><span>涨跌幅</span>
+        </div>
+        <div id="syb_list"></div>
+    </div>
+    <p class="syb_tip" id="syb_tip">点击表头切换榜单 · 点击任意一行跳转到该股详情（可用浏览器后退返回）</p>
+
+    <!-- ============ 个股详情（跳转目标，通过 #股票代码 访问） ============ -->
+    <div class="syb_detail" id="syb_detail">
+        <div class="syb_d_bar"><span class="iconfont icon-jinbi_o"></span><span id="syb_d_title">个股详情</span></div>
+        <div class="syb_d_body">
+            <div class="syb_d_top">
+                <span class="syb_d_name" id="syb_d_name">--</span>
+                <span class="syb_d_code syb_num" id="syb_d_code">--</span>
+            </div>
+            <div class="syb_d_price syb_num" id="syb_d_price">--</div>
+            <div class="syb_d_chg syb_num" id="syb_d_chg">--</div>
+            <div class="syb_d_grid syb_num" id="syb_d_grid"></div>
+            <div class="syb_d_note">行情数据每 5 秒刷新一次（演示为静态模拟数据），投资有风险，入市需谨慎。</div>
+        </div>
+        <a class="syb_back" href="#list">← 返回排行榜</a>
+    </div>
+
+    <script>
+        /* ==================== 模拟行情数据 ==================== */
+        var syb_data = {
+            hs: {
+                label: "沪深",
+                rows: [
+                    { code: "sh600100", name: "珈衡能",   price: 8.86,  chg: 3.35,  pct: "+60.58%" },
+                    { code: "sh600322", name: "天津松江", price: 8.16,  chg: 0.65,  pct: "+8.66%" },
+                    { code: "sh600390", name: "金瑞科技", price: 8.79,  chg: 0.42,  pct: "+5.02%" },
+                    { code: "sh600885", name: "宏发股份", price: 17.22, chg: 0.82,  pct: "+5.00%" },
+                    { code: "sh601177", name: "杭齿前进", price: 7.23,  chg: 0.34,  pct: "+4.93%" }
+                ]
+            },
+            hd: {
+                label: "沪跌",
+                rows: [
+                    { code: "sh600611", name: "中毅达",   price: 6.42,  chg: -0.58, pct: "-8.28%" },
+                    { code: "sh600679", name: "上海凤凰", price: 12.35, chg: -0.94, pct: "-7.07%" },
+                    { code: "sh600829", name: "耀皮玻璃", price: 4.68,  chg: -0.33, pct: "-6.59%" },
+                    { code: "sh600846", name: "亚虹股份", price: 9.87,  chg: -0.55, pct: "-5.28%" },
+                    { code: "sh600861", name: "哈高科",   price: 7.66,  chg: -0.36, pct: "-4.49%" }
+                ]
+            },
+            szz: {
+                label: "深涨",
+                rows: [
+                    { code: "sz002531", name: "天顺风能", price: 10.52, chg: 0.96,  pct: "+10.04%" },
+                    { code: "sz300266", name: "兴源过滤", price: 16.02, chg: 1.46,  pct: "+10.03%" },
+                    { code: "sz300223", name: "北京君正", price: 36.92, chg: 3.36,  pct: "+10.01%" },
+                    { code: "sz002699", name: "美盛文化", price: 32.87, chg: 2.99,  pct: "+10.01%" },
+                    { code: "sz002502", name: "骅威股份", price: 15.16, chg: 1.38,  pct: "+10.01%" }
+                ]
+            },
+            szd: {
+                label: "深跌",
+                rows: [
+                    { code: "sz000056", name: "皇庭国际", price: 5.13,  chg: -0.52, pct: "-9.20%" },
+                    { code: "sz002888", name: "惠伦晶体", price: 11.06, chg: -1.02, pct: "-8.44%" },
+                    { code: "sz000616", name: "万方发展", price: 8.42,  chg: -0.71, pct: "-7.78%" },
+                    { code: "sz002178", name: "延华智能", price: 5.96,  chg: -0.44, pct: "-6.88%" },
+                    { code: "sz002421", name: "金一文化", price: 4.35,  chg: -0.28, pct: "-6.05%" }
+                ]
+            }
+        };
+        var syb_current = "hs";   // 当前选中的榜单
+
+        /* ==================== 工具函数 ==================== */
+        // 涨显示红色、跌显示绿色
+        function syb_cls(syb_v) {
+            return syb_v > 0 ? "syb_up" : (syb_v < 0 ? "syb_down" : "");
+        }
+        function syb_sign(syb_v) {
+            return syb_v > 0 ? "+" : "";
+        }
+        // 根据 code 生成稳定的 0~1 模拟数（详情页开盘/最高/最低用）
+        function syb_rand(syb_code, syb_seed) {
+            var syb_sum = syb_seed;
+            for (var syb_i = 0; syb_i < syb_code.length; syb_i++) {
+                syb_sum += syb_code.charCodeAt(syb_i) * (syb_i + 1);
+            }
+            return (syb_sum % 100) / 100;
+        }
+
+        /* ==================== 榜单渲染 ==================== */
+        function syb_renderTabs() {
+            var syb_keys = ["hs", "hd", "szz", "szd"];
+            var syb_html = "";
+            for (var syb_i = 0; syb_i < syb_keys.length; syb_i++) {
+                var syb_k = syb_keys[syb_i];
+                syb_html += '<div class="syb_tab' + (syb_k === syb_current ? " syb_active" : "") +
+                    '" data-key="' + syb_k + '" onclick="syb_switchTab(\'' + syb_k + '\')">' + syb_data[syb_k].label + '</div>';
+            }
+            document.getElementById("syb_tabs").innerHTML = syb_html;
+        }
+
+        function syb_renderList() {
+            var syb_rows = syb_data[syb_current].rows;
+            var syb_html = "";
+            for (var syb_i = 0; syb_i < syb_rows.length; syb_i++) {
+                var syb_r = syb_rows[syb_i];
+                syb_html += '<a class="syb_row" href="#' + syb_r.code + '">' +
+                    '<span class="syb_name"><i>' + (syb_i + 1) + '.</i>' + syb_r.name + '</span>' +
+                    '<span class="syb_price syb_num">' + syb_r.price.toFixed(2) + '</span>' +
+                    '<span class="syb_chg syb_num ' + syb_cls(syb_r.chg) + '">' + syb_sign(syb_r.chg) + syb_r.chg.toFixed(2) + '</span>' +
+                    '<span class="syb_pct syb_num ' + syb_cls(syb_r.chg) + '">' + syb_r.pct + '</span>' +
+                    '</a>';
+            }
+            document.getElementById("syb_list").innerHTML = syb_html;
+        }
+
+        // 切换榜单（tab 跳转）
+        function syb_switchTab(syb_key) {
+            syb_current = syb_key;
+            syb_renderTabs();
+            syb_renderList();
+        }
+
+        /* ==================== 详情渲染（点击行跳转，URL 变为 #股票代码） ==================== */
+        function syb_renderRoute() {
+            var syb_hash = decodeURIComponent(location.hash.replace("#", ""));
+            var syb_board = document.getElementById("syb_board");
+            var syb_tip = document.getElementById("syb_tip");
+            var syb_detail = document.getElementById("syb_detail");
+
+            if (syb_hash === "" || syb_hash === "list") {
+                // 列表视图
+                syb_board.className = "syb_board";
+                syb_tip.className = "syb_tip";
+                syb_detail.className = "syb_detail";
+                return;
+            }
+
+            // 在四个榜单里找到这只股票
+            var syb_found = null;
+            for (var syb_key in syb_data) {
+                var syb_rows = syb_data[syb_key].rows;
+                for (var syb_i = 0; syb_i < syb_rows.length; syb_i++) {
+                    if (syb_rows[syb_i].code === syb_hash) { syb_found = syb_rows[syb_i]; }
+                }
+            }
+            if (!syb_found) { location.hash = "#list"; return; }
+
+            // 填充详情
+            document.getElementById("syb_d_title").innerHTML = syb_found.name + " · 行情详情";
+            document.getElementById("syb_d_name").innerHTML = syb_found.name;
+            document.getElementById("syb_d_code").innerHTML =
+                syb_found.code.indexOf("sh") === 0 ? "沪市 " : "深市 " + syb_found.code.toUpperCase();
+            document.getElementById("syb_d_price").innerHTML = syb_found.price.toFixed(2);
+            document.getElementById("syb_d_price").className = "syb_d_price syb_num " + syb_cls(syb_found.chg);
+            document.getElementById("syb_d_chg").innerHTML =
+                syb_sign(syb_found.chg) + syb_found.chg.toFixed(2) + "　" + syb_found.pct;
+            document.getElementById("syb_d_chg").className = "syb_d_chg syb_num " + syb_cls(syb_found.chg);
+
+            // 用模拟数生成昨收 / 今开 / 最高 / 最低 / 成交量
+            var syb_prev = syb_found.price - syb_found.chg;                       // 昨收 = 现价 - 涨跌额
+            var syb_open = syb_prev * (1 + (syb_rand(syb_found.code, 3) - 0.4) * 0.01);
+            var syb_high = Math.max(syb_found.price, syb_open) * (1 + syb_rand(syb_found.code, 7) * 0.008);
+            var syb_low  = Math.min(syb_found.price, syb_open) * (1 - syb_rand(syb_found.code, 11) * 0.008);
+            var syb_vol  = (2 + syb_rand(syb_found.code, 5) * 8).toFixed(2);
+            var syb_turn = (1 + syb_rand(syb_found.code, 9) * 12).toFixed(2);
+
+            document.getElementById("syb_d_grid").innerHTML =
+                "<div><b>昨收</b><span>" + syb_prev.toFixed(2) + "</span></div>" +
+                "<div><b>今开</b><span>" + syb_open.toFixed(2) + "</span></div>" +
+                "<div><b>最高</b><span>" + syb_high.toFixed(2) + "</span></div>" +
+                "<div><b>最低</b><span>" + syb_low.toFixed(2) + "</span></div>" +
+                "<div><b>成交量</b><span>" + syb_vol + " 万手</span></div>" +
+                "<div><b>换手率</b><span>" + syb_turn + "%</span></div>";
+
+            // 切到详情视图
+            syb_board.className = "syb_board syb_hide";
+            syb_tip.className = "syb_tip syb_hide";
+            syb_detail.className = "syb_detail syb_show";
+            window.scrollTo(0, 0);
+        }
+
+        // 监听地址栏变化（跳转 / 后退都会触发）
+        window.addEventListener("hashchange", syb_renderRoute);
+
+        // 页面加载：渲染榜单，并根据当前 hash 决定显示列表还是详情
+        syb_renderTabs();
+        syb_renderList();
+        syb_renderRoute();
+    </script>
+</body>
+</html>

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.10.29
+使用的大模型：CodeBuddy Auto
+功能名称：JavaScript 数组常用方法可视化演示
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 数组常用方法可视化演示</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_section_title {
+            max-width: 1020px;
+            margin: 30px auto 14px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .syb_badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ============ A. 数组实验台 ============ */
+        .syb_lab {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 22px;
+        }
+        .syb_lab_top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .syb_lab_top strong { font-size: 16px; color: #2c3e50; }
+        .syb_meter { font-size: 13px; color: #7f8c8d; }
+        .syb_meter b { color: #2980b9; font-family: Consolas, "Courier New", monospace; }
+        .syb_stage {
+            margin-top: 14px;
+            min-height: 104px;
+            padding: 16px 14px;
+            background: #f8fafc;
+            border: 1px dashed #cfdae4;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .syb_item {
+            width: 62px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #ffffff, #eaf4fc);
+            border: 2px solid #3498db;
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.25);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+        }
+        .syb_item_idx { font-size: 11px; color: #7f8c8d; font-family: Consolas, "Courier New", monospace; }
+        .syb_item_val { font-size: 20px; font-weight: bold; color: #2c3e50; font-family: Consolas, "Courier New", monospace; }
+        /* 新增元素：弹入动画 */
+        .syb_item_new { animation: syb_pop 0.45s ease; }
+        @keyframes syb_pop {
+            0%   { transform: scale(0.3); opacity: 0; }
+            60%  { transform: scale(1.18); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        /* 即将被删除的元素：标红缩小 */
+        .syb_item_out {
+            background: #fdecea;
+            border-color: #e74c3c;
+            color: #c0392b;
+            transform: scale(0.8);
+            opacity: 0.55;
+            transition: transform 0.28s ease, opacity 0.28s ease;
+        }
+        .syb_empty { color: #b2bec3; font-family: Consolas, "Courier New", monospace; font-size: 15px; }
+
+        .syb_btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .syb_btn {
+            border: none;
+            border-radius: 20px;
+            padding: 9px 16px;
+            font-size: 14px;
+            font-family: Consolas, "Courier New", monospace;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .syb_btn_del { background: #e67e22; }
+        .syb_btn_del:hover { background: #d35400; }
+        .syb_btn_sort { background: #8e44ad; }
+        .syb_btn_sort:hover { background: #71368a; }
+        .syb_btn_reset { background: #95a5a6; }
+        .syb_btn_reset:hover { background: #7f8c8d; }
+
+        .syb_console {
+            margin-top: 18px;
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: #dfe6e9;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .syb_log_line { padding: 4px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.12); }
+        .syb_log_line:last-child { border-bottom: none; }
+        .syb_log_code { color: #f1c40f; }
+        .syb_log_ret { color: #2ecc71; font-weight: bold; }
+        .syb_log_now { color: #74b9ff; }
+        .syb_log_tip { color: #95a5a6; }
+
+        /* ============ B / C. 方法卡片 ============ */
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_green { border-top-color: #27ae60; }
+        .syb_card_purple { border-top-color: #8e44ad; }
+        .syb_card_title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; font-family: Consolas, "Courier New", monospace; }
+        .syb_codeblock {
+            background: #fdecea;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #c0392b;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .syb_vis { margin-top: 12px; }
+        .syb_chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+        .syb_chip {
+            min-width: 34px;
+            padding: 4px 7px;
+            border-radius: 6px;
+            background: #eaf4fc;
+            color: #2471a3;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            text-align: center;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+        }
+        .syb_chip i { font-style: normal; font-size: 10px; color: #90a4b5; }
+        .syb_chip_hit { background: #fdebd0; color: #b9770e; }        /* 命中 / 截取范围 */
+        .syb_chip_keep { background: #e8f8f0; color: #1e8449; }      /* 保留 */
+        .syb_chip_drop { background: #eceff1; color: #b0b7bd; text-decoration: line-through; } /* 淘汰 */
+        .syb_chip_new { background: #ede7f6; color: #6c3483; }        /* 生成的新元素 */
+        .syb_op {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            color: #7f8c8d;
+            padding: 0 2px;
+        }
+        .syb_arrow {
+            margin: 8px 0;
+            font-size: 12px;
+            color: #8e44ad;
+            font-family: Consolas, "Courier New", monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .syb_arrow::before { content: "↓"; font-size: 15px; font-weight: bold; }
+        .syb_str {
+            display: inline-block;
+            background: #fff9e6;
+            border: 1px dashed #f39c12;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: Consolas, "Courier New", monospace;
+            color: #b9770e;
+            font-size: 14px;
+        }
+        .syb_nest {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border: 1px dashed #b2bec3;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .syb_lines {
+            margin-top: 10px;
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #74b9ff;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.7;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+        .syb_result_row { margin-top: 10px; font-size: 13px; line-height: 1.7; color: #555; }
+        .syb_result { color: #2980b9; font-family: Consolas, "Courier New", monospace; font-weight: bold; }
+        .syb_desc {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .syb_tag_yes { color: #c0392b; font-weight: bold; }
+        .syb_tag_no { color: #1e8449; font-weight: bold; }
+
+        /* ============ D. 速查表 ============ */
+        .syb_table {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #f39c12;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 8px 4px 4px;
+            overflow-x: auto;
+        }
+        .syb_table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .syb_table th, .syb_table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f1f2f6; }
+        .syb_table th { background: #fdf6e3; color: #7d6608; }
+        .syb_table td:first-child { font-family: Consolas, "Courier New", monospace; color: #2c3e50; font-weight: bold; }
+        .syb_table tr:last-child td { border-bottom: none; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 800px) {
+            .syb_cards { grid-template-columns: 1fr; }
+            .syb_item { width: 48px; }
+            .syb_item_val { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 数组常用方法可视化演示</h1>
+        <p>把数组想成一排"带编号的车厢"：下面每个方法都会真实运行一次，并画出操作前后的样子</p>
+    </div>
+
+    <!-- ==================== A. 数组实验台（会改变原数组的方法） ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">A</span>数组实验台：增删改排（改变原数组）</div>
+    <div class="syb_lab">
+        <div class="syb_lab_top">
+            <strong>当前数组 syb_arr</strong>
+            <span class="syb_meter">长度 <b id="syb_len">0</b> ｜ 内容 <b id="syb_now">[]</b></span>
+        </div>
+
+        <!-- 数组元素由 JavaScript 动态渲染 -->
+        <div class="syb_stage" id="syb_stage"></div>
+
+        <div class="syb_btns">
+            <button class="syb_btn" title="尾部添加一个或多个元素，返回新长度" onclick="syb_op_push()">push(7)</button>
+            <button class="syb_btn syb_btn_del" title="删除并返回尾部元素" onclick="syb_op_pop()">pop()</button>
+            <button class="syb_btn" title="头部添加一个或多个元素，返回新长度" onclick="syb_op_unshift()">unshift(0)</button>
+            <button class="syb_btn syb_btn_del" title="删除并返回头部元素" onclick="syb_op_shift()">shift()</button>
+            <button class="syb_btn syb_btn_del" title="从指定下标删除若干元素并可插入新元素" onclick="syb_op_splice()">splice(2,1,8)</button>
+            <button class="syb_btn syb_btn_sort" title="按数值升序排序，原数组被改变" onclick="syb_op_sort()">sort()</button>
+            <button class="syb_btn syb_btn_sort" title="颠倒元素顺序，原数组被改变" onclick="syb_op_reverse()">reverse()</button>
+            <button class="syb_btn syb_btn_reset" title="恢复初始数组" onclick="syb_op_reset()">重置</button>
+        </div>
+
+        <div class="syb_console" id="syb_console">
+            <div class="syb_log_line"><span class="syb_log_tip">// 点击上面的按钮，这里会记录每一步操作：代码 → 返回值 → 操作后的数组</span></div>
+        </div>
+    </div>
+
+    <!-- ==================== B. 查询与截取（不改变原数组） ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">B</span>查询与截取（不改变原数组）</div>
+    <div class="syb_cards">
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">1</span><strong>join("-")</strong></div>
+            <div class="syb_codeblock">var syb_arr = [3, 1, 4, 1, 5, 9, 2, 6];
+syb_arr.join("-");   // 用 "-" 把元素串起来</div>
+            <div class="syb_vis" id="syb_vis_join"></div>
+            <div class="syb_desc">把数组"拼接"成一个字符串，元素之间放分隔符；原数组不变。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">2</span><strong>slice(2, 5)</strong></div>
+            <div class="syb_codeblock">syb_arr.slice(2, 5);   // 截取下标 2 ~ 5，不含 5</div>
+            <div class="syb_vis" id="syb_vis_slice"></div>
+            <div class="syb_desc">"切一片"出来，含头不含尾；原数组不变，常用于复制数组 slice(0)。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">3</span><strong>concat([7, 8])</strong></div>
+            <div class="syb_codeblock">syb_arr.concat([7, 8]);   // 拼接两个数组</div>
+            <div class="syb_vis" id="syb_vis_concat"></div>
+            <div class="syb_desc">把两个数组"接成一列"，返回新数组，原数组不变。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">4</span><strong>indexOf / lastIndexOf</strong></div>
+            <div class="syb_codeblock">syb_arr.indexOf(1);        // 从前往后找
+syb_arr.lastIndexOf(1);    // 从后往前找</div>
+            <div class="syb_vis" id="syb_vis_indexof"></div>
+            <div class="syb_desc">找元素第一次 / 最后一次出现的下标，找不到返回 -1。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">5</span><strong>includes(9)</strong></div>
+            <div class="syb_codeblock">syb_arr.includes(9);     // true
+syb_arr.includes(100);   // false</div>
+            <div class="syb_vis" id="syb_vis_includes"></div>
+            <div class="syb_desc">只问"有没有"，返回 true / false，比 indexOf 更直观。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">6</span><strong>find / findIndex</strong></div>
+            <div class="syb_codeblock">syb_arr.find(function (syb_v) {
+    return syb_v &gt; 4;
+});</div>
+            <div class="syb_vis" id="syb_vis_find"></div>
+            <div class="syb_desc">按条件找"第一个"满足的元素 / 它的下标，找不到分别是 undefined / -1。</div>
+        </div>
+    </div>
+
+    <!-- ==================== C. 遍历与高阶函数 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">C</span>遍历与高阶函数（逐个处理元素）</div>
+    <div class="syb_cards">
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">7</span><strong>forEach</strong></div>
+            <div class="syb_codeblock">syb_arr.forEach(function (syb_v, syb_i) {
+    // 依次处理每个元素，无返回值
+});</div>
+            <div class="syb_vis" id="syb_vis_foreach"></div>
+            <div class="syb_desc">挨个"点名"，只做事不返回新数组；不能用 break 中断。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">8</span><strong>map</strong></div>
+            <div class="syb_codeblock">syb_arr.map(function (syb_v) {
+    return syb_v * 2;
+});</div>
+            <div class="syb_vis" id="syb_vis_map"></div>
+            <div class="syb_desc">"一一映射"：每个元素加工后放入新数组，长度不变，原数组不变。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">9</span><strong>filter</strong></div>
+            <div class="syb_codeblock">syb_arr.filter(function (syb_v) {
+    return syb_v &gt; 3;
+});</div>
+            <div class="syb_vis" id="syb_vis_filter"></div>
+            <div class="syb_desc">"过滤器"：条件为 true 的留下，false 的淘汰，返回新数组。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">10</span><strong>reduce</strong></div>
+            <div class="syb_codeblock">syb_arr.reduce(function (syb_sum, syb_v) {
+    return syb_sum + syb_v;
+}, 0);</div>
+            <div class="syb_vis" id="syb_vis_reduce"></div>
+            <div class="syb_desc">"归并"：从左到右把元素逐个累积成一个值（求和、求最大值等）。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">11</span><strong>some / every</strong></div>
+            <div class="syb_codeblock">syb_arr.some(function (syb_v) { return syb_v &gt; 5; });
+syb_arr.every(function (syb_v) { return syb_v &gt; 5; });</div>
+            <div class="syb_vis" id="syb_vis_some"></div>
+            <div class="syb_desc">some：有一个满足就 true；every：全部满足才 true。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">12</span><strong>flat(2)</strong></div>
+            <div class="syb_codeblock">var syb_nest = [1, [2, 3], [4, [5]]];
+syb_nest.flat(2);   // 拍平两层</div>
+            <div class="syb_vis" id="syb_vis_flat"></div>
+            <div class="syb_desc">把"盒子套盒子"的多维数组压平成一维，参数表示拍平的层数。</div>
+        </div>
+    </div>
+
+    <!-- ==================== D. 速查表 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">D</span>数组方法速查表（重点：是否改变原数组）</div>
+    <div class="syb_table">
+        <table>
+            <thead>
+                <tr><th>方法</th><th>作用</th><th>是否改变原数组</th><th>返回值</th></tr>
+            </thead>
+            <tbody id="syb_table_body"></tbody>
+        </table>
+    </div>
+
+    <div class="syb_note">
+        记忆口诀：<strong>push / pop</strong> 管尾部，<strong>unshift / shift</strong> 管头部，<strong>splice</strong> 管任意位置，
+        <strong>sort / reverse</strong> 管顺序 —— 这 7 个会<strong>改变原数组</strong>；
+        <strong>join / slice / concat / indexOf / includes / find / map / filter / reduce / forEach / some / every / flat</strong>
+        都<strong>不改变原数组</strong>，它们把结果作为返回值交给你。
+    </div>
+
+    <script>
+        /* =======================================================
+           A 区：数组实验台
+           每个元素是一个对象 { syb_id, syb_v }，
+           syb_id 用来在排序 / 反转后追踪同一个元素，做出移动动画
+        ======================================================= */
+        var syb_nextId = 1;
+        var syb_items = [];
+
+        function syb_make(syb_v) {
+            return { syb_id: syb_nextId++, syb_v: syb_v };
+        }
+        function syb_values() {
+            var syb_out = [];
+            for (var syb_i = 0; syb_i < syb_items.length; syb_i++) {
+                syb_out.push(syb_items[syb_i].syb_v);
+            }
+            return syb_out;
+        }
+
+        // 渲染数组（FLIP 动画：先记录旧位置，渲染后从旧位置滑到新位置）
+        function syb_render(syb_enterIds) {
+            var syb_stage = document.getElementById("syb_stage");
+            var syb_before = {};
+            var syb_oldNodes = syb_stage.querySelectorAll(".syb_item");
+            for (var syb_i = 0; syb_i < syb_oldNodes.length; syb_i++) {
+                syb_before[syb_oldNodes[syb_i].getAttribute("data-id")] = syb_oldNodes[syb_i].getBoundingClientRect();
+            }
+
+            var syb_html = "";
+            if (syb_items.length === 0) {
+                syb_html = '<div class="syb_empty">数组为空：[]（再点 pop/shift 也不会报错，只会返回 undefined）</div>';
+            }
+            for (var syb_j = 0; syb_j < syb_items.length; syb_j++) {
+                var syb_cls = "syb_item";
+                if (syb_enterIds && syb_enterIds.indexOf(syb_items[syb_j].syb_id) >= 0) {
+                    syb_cls += " syb_item_new";
+                }
+                syb_html += '<div class="' + syb_cls + '" data-id="' + syb_items[syb_j].syb_id + '">' +
+                                '<span class="syb_item_idx">[' + syb_j + ']</span>' +
+                                '<span class="syb_item_val">' + syb_items[syb_j].syb_v + '</span>' +
+                            '</div>';
+            }
+            syb_stage.innerHTML = syb_html;
+
+            // FLIP：让位置发生变化的元素从旧位置滑到新位置
+            var syb_newNodes = syb_stage.querySelectorAll(".syb_item");
+            var syb_moved = [];
+            for (var syb_k = 0; syb_k < syb_newNodes.length; syb_k++) {
+                var syb_node = syb_newNodes[syb_k];
+                var syb_box0 = syb_before[syb_node.getAttribute("data-id")];
+                if (!syb_box0) { continue; }
+                var syb_box1 = syb_node.getBoundingClientRect();
+                var syb_dx = syb_box0.left - syb_box1.left;
+                var syb_dy = syb_box0.top - syb_box1.top;
+                if (syb_dx !== 0 || syb_dy !== 0) {
+                    syb_node.style.transition = "none";
+                    syb_node.style.transform = "translate(" + syb_dx + "px," + syb_dy + "px)";
+                    syb_moved.push(syb_node);
+                }
+            }
+            if (syb_moved.length > 0) {
+                requestAnimationFrame(function () {
+                    for (var syb_m = 0; syb_m < syb_moved.length; syb_m++) {
+                        syb_moved[syb_m].style.transition = "transform .38s cubic-bezier(.4,0,.2,1)";
+                        syb_moved[syb_m].style.transform = "";
+                    }
+                });
+            }
+
+            document.getElementById("syb_len").innerHTML = syb_items.length;
+            document.getElementById("syb_now").innerHTML = "[" + syb_values().join(", ") + "]";
+        }
+
+        // 写一行操作日志
+        function syb_log(syb_code, syb_ret, syb_tip) {
+            var syb_box = document.getElementById("syb_console");
+            var syb_line = document.createElement("div");
+            syb_line.className = "syb_log_line";
+            syb_line.innerHTML = '<span class="syb_log_code">' + syb_code + '</span> → 返回 <span class="syb_log_ret">' + syb_ret +
+                                 '</span> ｜ 现在 <span class="syb_log_now">[' + syb_values().join(", ") + ']</span>' +
+                                 ' <span class="syb_log_tip">// ' + syb_tip + '</span>';
+            syb_box.insertBefore(syb_line, syb_box.firstChild);
+            while (syb_box.children.length > 8) {
+                syb_box.removeChild(syb_box.lastChild);
+            }
+        }
+
+        // 删除前先给要删的元素标红，再真正删除
+        function syb_removeThen(syb_ids, syb_cb) {
+            var syb_stage = document.getElementById("syb_stage");
+            for (var syb_i = 0; syb_i < syb_ids.length; syb_i++) {
+                var syb_node = syb_stage.querySelector('.syb_item[data-id="' + syb_ids[syb_i] + '"]');
+                if (syb_node) { syb_node.className += " syb_item_out"; }
+            }
+            setTimeout(syb_cb, 300);
+        }
+
+        // ---- 各个操作 ----
+        function syb_op_push() {
+            var syb_new = syb_make(7);
+            syb_items.push(syb_new);
+            syb_render([syb_new.syb_id]);
+            syb_log("syb_arr.push(7)", syb_items.length, "尾部添加一个或多个元素，返回新长度");
+        }
+        function syb_op_pop() {
+            if (syb_items.length === 0) {
+                syb_log("syb_arr.pop()", "undefined", "数组已空，弹出得到 undefined");
+                return;
+            }
+            var syb_tail = syb_items[syb_items.length - 1];
+            syb_removeThen([syb_tail.syb_id], function () {
+                var syb_r = syb_items.pop();
+                syb_render([]);
+                syb_log("syb_arr.pop()", syb_r.syb_v, "删除并返回最后一个元素");
+            });
+        }
+        function syb_op_unshift() {
+            var syb_new = syb_make(0);
+            syb_items.unshift(syb_new);
+            syb_render([syb_new.syb_id]);
+            syb_log("syb_arr.unshift(0)", syb_items.length, "头部添加，其余元素下标全部后移一位");
+        }
+        function syb_op_shift() {
+            if (syb_items.length === 0) {
+                syb_log("syb_arr.shift()", "undefined", "数组已空，弹出得到 undefined");
+                return;
+            }
+            var syb_head = syb_items[0];
+            syb_removeThen([syb_head.syb_id], function () {
+                var syb_r = syb_items.shift();
+                syb_render([]);
+                syb_log("syb_arr.shift()", syb_r.syb_v, "删除并返回第一个元素，其余元素下标全部前移");
+            });
+        }
+        function syb_op_splice() {
+            if (syb_items.length < 3) {
+                syb_log("syb_arr.splice(2, 1, 8)", "[]", "元素不足 3 个，无法从下标 2 删除");
+                return;
+            }
+            var syb_target = syb_items[2];
+            syb_removeThen([syb_target.syb_id], function () {
+                var syb_new = syb_make(8);
+                var syb_del = syb_items.splice(2, 1, syb_new);
+                var syb_delValues = [];
+                for (var syb_i = 0; syb_i < syb_del.length; syb_i++) { syb_delValues.push(syb_del[syb_i].syb_v); }
+                syb_render([syb_new.syb_id]);
+                syb_log("syb_arr.splice(2, 1, 8)", "[" + syb_delValues.join(", ") + "]", "从下标 2 删 1 个并插入 8，返回被删掉的元素");
+            });
+        }
+        function syb_op_sort() {
+            syb_items.sort(function (syb_a, syb_b) { return syb_a.syb_v - syb_b.syb_v; });
+            syb_render([]);
+            syb_log("syb_arr.sort((a, b) => a - b)", "[" + syb_values().join(", ") + "]", "按数值升序重排，原数组被改变");
+        }
+        function syb_op_reverse() {
+            syb_items.reverse();
+            syb_render([]);
+            syb_log("syb_arr.reverse()", "[" + syb_values().join(", ") + "]", "颠倒顺序，原数组被改变");
+        }
+        function syb_op_reset() {
+            syb_items = [];
+            var syb_init = [3, 1, 4, 1, 5, 9, 2, 6];
+            for (var syb_i = 0; syb_i < syb_init.length; syb_i++) { syb_items.push(syb_make(syb_init[syb_i])); }
+            syb_render([]);
+            syb_log("syb_arr = [3, 1, 4, 1, 5, 9, 2, 6]", syb_items.length, "已恢复初始数组");
+        }
+
+        /* =======================================================
+           B / C 区：小卡片的公共工具
+           syb_chips(数组, 状态数组) 把数组画成一排带下标的小卡片
+           状态：'' 普通 / 'hit' 命中 / 'keep' 保留 / 'drop' 淘汰 / 'new' 新生成
+        ======================================================= */
+        function syb_chips(syb_arr, syb_state) {
+            var syb_html = '<div class="syb_chips">';
+            for (var syb_i = 0; syb_i < syb_arr.length; syb_i++) {
+                var syb_s = syb_state && syb_state[syb_i] ? " syb_chip_" + syb_state[syb_i] : "";
+                syb_html += '<span class="syb_chip' + syb_s + '">' + syb_arr[syb_i] + '<i>[' + syb_i + ']</i></span>';
+            }
+            return syb_html + '</div>';
+        }
+        function syb_fill(syb_id, syb_html) {
+            document.getElementById(syb_id).innerHTML = syb_html;
+        }
+
+        var syb_arr = [3, 1, 4, 1, 5, 9, 2, 6];   // 演示用的示例数组
+
+        // 1. join
+        syb_fill("syb_vis_join",
+            syb_chips(syb_arr, []) +
+            '<div class="syb_arrow">join("-") 连成字符串</div>' +
+            '<span class="syb_str">"' + syb_arr.join("-") + '"</span>');
+
+        // 2. slice
+        var syb_sliceState = [];
+        for (var syb_i = 0; syb_i < syb_arr.length; syb_i++) {
+            syb_sliceState.push(syb_i >= 2 && syb_i < 5 ? "hit" : "");
+        }
+        syb_fill("syb_vis_slice",
+            syb_chips(syb_arr, syb_sliceState) +
+            '<div class="syb_arrow">slice(2, 5) 含头不含尾</div>' +
+            syb_chips(syb_arr.slice(2, 5), ["new", "new", "new"]));
+
+        // 3. concat
+        var syb_add = [7, 8];
+        var syb_concatArr = syb_arr.concat(syb_add);
+        var syb_concatState = [];
+        for (var syb_i2 = 0; syb_i2 < syb_concatArr.length; syb_i2++) {
+            syb_concatState.push(syb_i2 >= syb_arr.length ? "new" : "");
+        }
+        syb_fill("syb_vis_concat",
+            '<div class="syb_chips">' + syb_chips(syb_arr, []) +
+            '<span class="syb_op">+</span>' + syb_chips(syb_add, ["new", "new"]) + '</div>' +
+            '<div class="syb_arrow">concat 接成一列</div>' +
+            syb_chips(syb_concatArr, syb_concatState));
+
+        // 4. indexOf / lastIndexOf
+        var syb_idxState = [];
+        for (var syb_i3 = 0; syb_i3 < syb_arr.length; syb_i3++) {
+            syb_idxState.push(syb_arr[syb_i3] === 1 ? "hit" : "");
+        }
+        syb_fill("syb_vis_indexof",
+            syb_chips(syb_arr, syb_idxState) +
+            '<div class="syb_result_row">找元素 1：indexOf(1) = <span class="syb_result">' + syb_arr.indexOf(1) +
+            '</span> ｜ lastIndexOf(1) = <span class="syb_result">' + syb_arr.lastIndexOf(1) + '</span></div>');
+
+        // 5. includes
+        var syb_incState = [];
+        for (var syb_i4 = 0; syb_i4 < syb_arr.length; syb_i4++) {
+            syb_incState.push(syb_arr[syb_i4] === 9 ? "hit" : "");
+        }
+        syb_fill("syb_vis_includes",
+            syb_chips(syb_arr, syb_incState) +
+            '<div class="syb_result_row">includes(9) = <span class="syb_result">' + syb_arr.includes(9) +
+            '</span> ｜ includes(100) = <span class="syb_result">' + syb_arr.includes(100) + '</span></div>');
+
+        // 6. find / findIndex
+        var syb_found = syb_arr.find(function (syb_v) { return syb_v > 4; });
+        var syb_foundIndex = syb_arr.findIndex(function (syb_v) { return syb_v > 4; });
+        var syb_findState = [];
+        for (var syb_i5 = 0; syb_i5 < syb_arr.length; syb_i5++) {
+            syb_findState.push(syb_i5 === syb_foundIndex ? "hit" : "");
+        }
+        syb_fill("syb_vis_find",
+            syb_chips(syb_arr, syb_findState) +
+            '<div class="syb_result_row">条件 v &gt; 4：find = <span class="syb_result">' + syb_found +
+            '</span> ｜ findIndex = <span class="syb_result">' + syb_foundIndex + '</span></div>');
+
+        // 7. forEach
+        var syb_lines = "";
+        syb_arr.forEach(function (syb_v, syb_i6) {
+            syb_lines += "下标 " + syb_i6 + " → 值 " + syb_v + "，平方是 " + (syb_v * syb_v) + "<br>";
+        });
+        syb_fill("syb_vis_foreach",
+            syb_chips(syb_arr, []) +
+            '<div class="syb_arrow">forEach 挨个点名</div>' +
+            '<div class="syb_lines">' + syb_lines + '</div>');
+
+        // 8. map
+        var syb_mapped = syb_arr.map(function (syb_v) { return syb_v * 2; });
+        var syb_mapState = [];
+        for (var syb_i7 = 0; syb_i7 < syb_mapped.length; syb_i7++) { syb_mapState.push("new"); }
+        syb_fill("syb_vis_map",
+            syb_chips(syb_arr, []) +
+            '<div class="syb_arrow">map(v =&gt; v * 2) 一一加工</div>' +
+            syb_chips(syb_mapped, syb_mapState));
+
+        // 9. filter
+        var syb_filterState = [];
+        for (var syb_i8 = 0; syb_i8 < syb_arr.length; syb_i8++) {
+            syb_filterState.push(syb_arr[syb_i8] > 3 ? "keep" : "drop");
+        }
+        syb_fill("syb_vis_filter",
+            syb_chips(syb_arr, syb_filterState) +
+            '<div class="syb_arrow">filter(v =&gt; v &gt; 3) 留下 &gt;3 的</div>' +
+            syb_chips(syb_arr.filter(function (syb_v) { return syb_v > 3; }), ["new", "new", "new", "new"]));
+
+        // 10. reduce
+        var syb_sum = syb_arr.reduce(function (syb_s, syb_v) { return syb_s + syb_v; }, 0);
+        var syb_chain = '<div class="syb_chips">';
+        for (var syb_i9 = 0; syb_i9 < syb_arr.length; syb_i9++) {
+            if (syb_i9 > 0) { syb_chain += '<span class="syb_op">+</span>'; }
+            syb_chain += '<span class="syb_chip">' + syb_arr[syb_i9] + '<i>[' + syb_i9 + ']</i></span>';
+        }
+        syb_chain += '<span class="syb_op">=</span><span class="syb_chip syb_chip_hit">' + syb_sum + '<i>合计</i></span></div>';
+        syb_fill("syb_vis_reduce", syb_chain);
+
+        // 11. some / every
+        var syb_someState = [];
+        for (var syb_i10 = 0; syb_i10 < syb_arr.length; syb_i10++) {
+            syb_someState.push(syb_arr[syb_i10] > 5 ? "keep" : "drop");
+        }
+        syb_fill("syb_vis_some",
+            syb_chips(syb_arr, syb_someState) +
+            '<div class="syb_result_row">条件 v &gt; 5：some = <span class="syb_result">' +
+            syb_arr.some(function (syb_v) { return syb_v > 5; }) +
+            '</span>（只要有一个）｜ every = <span class="syb_result">' +
+            syb_arr.every(function (syb_v) { return syb_v > 5; }) + '</span>（必须全都）</div>');
+
+        // 12. flat
+        var syb_nest = [1, [2, 3], [4, [5]]];
+        var syb_flatArr = syb_nest.flat(2);
+        var syb_nestHtml = '<div class="syb_chips">' +
+            '<span class="syb_chip">1<i>[0]</i></span>' +
+            '<span class="syb_nest"><span class="syb_chip">2</span><span class="syb_chip">3</span></span>' +
+            '<span class="syb_nest"><span class="syb_chip">4</span>' +
+                '<span class="syb_nest"><span class="syb_chip">5</span></span>' +
+            '</span></div>';
+        var syb_flatState = [];
+        for (var syb_i11 = 0; syb_i11 < syb_flatArr.length; syb_i11++) { syb_flatState.push("new"); }
+        syb_fill("syb_vis_flat",
+            syb_nestHtml +
+            '<div class="syb_arrow">flat(2) 盒子套盒子 → 一层</div>' +
+            syb_chips(syb_flatArr, syb_flatState));
+
+        /* =======================================================
+           D 区：速查表
+        ======================================================= */
+        var syb_rows = [
+            ["push(元素)", "尾部添加", "改变", "新长度"],
+            ["pop()", "删除尾部元素", "改变", "被删的元素"],
+            ["unshift(元素)", "头部添加", "改变", "新长度"],
+            ["shift()", "删除头部元素", "改变", "被删的元素"],
+            ["splice(起始, 个数, 新元素…)", "任意位置增 / 删 / 改", "改变", "被删元素组成的数组"],
+            ["sort(比较函数)", "排序（默认按字符串，数字要写 a - b）", "改变", "排序后的数组"],
+            ["reverse()", "颠倒顺序", "改变", "反转后的数组"],
+            ["join(分隔符)", "拼接成字符串", "不变", "字符串"],
+            ["slice(开始, 结束)", "截取（含头不含尾）", "不变", "新数组"],
+            ["concat(数组)", "拼接数组", "不变", "新数组"],
+            ["indexOf / lastIndexOf(元素)", "查找下标", "不变", "下标，找不到为 -1"],
+            ["includes(元素)", "判断是否包含", "不变", "true / false"],
+            ["find / findIndex(条件)", "按条件找第一个", "不变", "元素 / 下标"],
+            ["forEach(回调)", "遍历，不返回", "不变", "undefined"],
+            ["map(回调)", "逐个加工，长度不变", "不变", "新数组"],
+            ["filter(回调)", "按条件筛选", "不变", "新数组（子集）"],
+            ["reduce(回调, 初值)", "累积成一个值", "不变", "累积结果"],
+            ["some / every(回调)", "是否有一个 / 全部满足", "不变", "true / false"],
+            ["flat(层数)", "拍平多维数组", "不变", "新数组"],
+            ["length", "元素个数（属性，不是方法）", "—", "数字"]
+        ];
+        var syb_tableHtml = "";
+        for (var syb_r = 0; syb_r < syb_rows.length; syb_r++) {
+            var syb_cell3 = syb_rows[syb_r][2];
+            var syb_cls = syb_cell3 === "改变" ? "syb_tag_yes" : (syb_cell3 === "不变" ? "syb_tag_no" : "");
+            syb_tableHtml += "<tr><td>" + syb_rows[syb_r][0] + "</td><td>" + syb_rows[syb_r][1] +
+                             '</td><td class="' + syb_cls + '">' + syb_cell3 + "</td><td>" + syb_rows[syb_r][3] + "</td></tr>";
+        }
+        syb_fill("syb_table_body", syb_tableHtml);
+
+        // 页面加载完成：初始化实验台
+        syb_op_reset();
+    </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：商品列表页（fetch 获取 dummyjson 商品接口，点击跳转详情页）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 商品列表（fetch 接口数据）</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 24px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+        .syb_header .syb_url {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 16px;
+            background: #2c3e50;
+            color: #2ecc71;
+            border-radius: 18px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        .syb_toolbar {
+            max-width: 1020px;
+            margin: 0 auto 20px;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .syb_status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #555; }
+        .syb_dot { width: 10px; height: 10px; border-radius: 50%; background: #95a5a6; }
+        .syb_dot.syb_loading { background: #f39c12; animation: syb_blink 0.8s infinite; }
+        .syb_dot.syb_ok { background: #27ae60; }
+        .syb_dot.syb_err { background: #e74c3c; }
+        @keyframes syb_blink { 50% { opacity: 0.3; } }
+        .syb_btn {
+            border: none;
+            border-radius: 19px;
+            height: 36px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+
+        /* 加载中 */
+        .syb_loading_box { max-width: 1020px; margin: 0 auto; text-align: center; padding: 60px 0; color: #7f8c8d; font-size: 14px; }
+        .syb_spinner {
+            width: 42px; height: 42px;
+            margin: 0 auto 14px;
+            border: 4px solid #dfe8f0;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: syb_spin 0.8s linear infinite;
+        }
+        @keyframes syb_spin { to { transform: rotate(360deg); } }
+
+        .syb_error {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fdecea;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.8;
+            display: none;
+        }
+        .syb_error.syb_show { display: block; }
+
+        /* 商品卡片 */
+        .syb_grid {
+            max-width: 1020px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+        /* 每张卡片都是 <a>，点击跳转详情页 */
+        .syb_card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.25s, box-shadow 0.25s;
+            animation: syb_in 0.35s ease;
+        }
+        .syb_card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(52, 152, 219, 0.25);
+        }
+        @keyframes syb_in {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .syb_card_img_box { position: relative; background: #fff; padding: 12px; }
+        .syb_card_img_box img {
+            width: 100%;
+            height: 160px;
+            object-fit: contain;
+            display: block;
+        }
+        .syb_discount {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: #e74c3c;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 2px 8px;
+        }
+        .syb_card_body { padding: 0 14px 14px; }
+        .syb_card_cat {
+            display: inline-block;
+            font-size: 11px;
+            color: #2471a3;
+            background: #eaf4fc;
+            border-radius: 10px;
+            padding: 2px 10px;
+            margin-bottom: 8px;
+        }
+        .syb_card_title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            height: 42px;
+            overflow: hidden;
+        }
+        .syb_card_price { font-size: 18px; font-weight: bold; color: #e74c3c; }
+        .syb_card_price small { font-size: 12px; color: #b2bec3; text-decoration: line-through; font-weight: normal; margin-left: 6px; }
+        .syb_card_foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #8a8a8a; }
+        .syb_stars { color: #f39c12; letter-spacing: 1px; }
+        .syb_stock_ok { color: #27ae60; }
+        .syb_stock_low { color: #e67e22; }
+
+        .syb_tip {
+            max-width: 1020px;
+            margin: 20px auto 0;
+            font-size: 12px;
+            color: #b0b0b0;
+            text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            .syb_grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .syb_grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 商品列表</h1>
+        <p>使用 fetch 获取接口商品数据，点击任意商品卡片跳转到对应的详情页</p>
+        <span class="syb_url">GET https://dummyjson.com/products?limit=8</span>
+    </div>
+
+    <div class="syb_toolbar">
+        <div class="syb_status">
+            <span class="syb_dot" id="syb_dot"></span>
+            <span id="syb_status_text">等待请求…</span>
+        </div>
+        <button class="syb_btn" onclick="syb_load()">重新请求</button>
+    </div>
+
+    <div class="syb_loading_box" id="syb_loading">
+        <div class="syb_spinner"></div>
+        正在加载商品列表…
+    </div>
+
+    <div class="syb_error" id="syb_error"></div>
+
+    <div class="syb_grid" id="syb_grid"></div>
+    <p class="syb_tip" id="syb_tip" style="display: none;">点击卡片查看商品详情（详情页通过 URL 参数 ?id=商品编号 传值）</p>
+
+    <script>
+        var syb_api = "https://dummyjson.com/products?limit=8";
+
+        function syb_setStatus(syb_type, syb_text) {
+            document.getElementById("syb_dot").className = "syb_dot" + (syb_type ? " syb_" + syb_type : "");
+            document.getElementById("syb_status_text").innerHTML = syb_text;
+        }
+
+        // 评分转星号：4.69 → ★★★★☆
+        function syb_stars(syb_rating) {
+            var syb_full = Math.round(syb_rating);
+            var syb_s = "";
+            for (var syb_i = 0; syb_i < 5; syb_i++) {
+                syb_s += syb_i < syb_full ? "★" : "☆";
+            }
+            return syb_s;
+        }
+
+        function syb_load() {
+            document.getElementById("syb_loading").style.display = "block";
+            document.getElementById("syb_grid").innerHTML = "";
+            document.getElementById("syb_error").className = "syb_error";
+            syb_setStatus("loading", "正在请求商品接口…");
+
+            fetch(syb_api)
+                .then(function (syb_r) {
+                    if (!syb_r.ok) { throw new Error("HTTP 状态码 " + syb_r.status); }
+                    return syb_r.json();          // { products: [...], total: 194, ... }
+                })
+                .then(function (syb_res) {
+                    var syb_list = syb_res.products;   // 商品数组在 products 字段里
+                    document.getElementById("syb_loading").style.display = "none";
+                    syb_setStatus("ok", "请求成功：HTTP 200，共获取 " + syb_list.length + " 件商品（接口总数 " + syb_res.total + "）");
+
+                    var syb_html = "";
+                    for (var syb_i = 0; syb_i < syb_list.length; syb_i++) {
+                        var syb_p = syb_list[syb_i];
+                        // 原价 = 现价 /（1 - 折扣%），反推出来划线展示
+                        var syb_old = (syb_p.price / (1 - syb_p.discountPercentage / 100)).toFixed(2);
+                        var syb_stockCls = syb_p.stock > 20 ? "syb_stock_ok" : "syb_stock_low";
+                        syb_html += '<a class="syb_card" href="17-3-detail.html?id=' + syb_p.id + '">' +
+                            '<div class="syb_card_img_box">' +
+                                '<img src="' + syb_p.thumbnail + '" alt="' + syb_p.title + '">' +
+                                '<span class="syb_discount">-' + syb_p.discountPercentage.toFixed(1) + '%</span>' +
+                            '</div>' +
+                            '<div class="syb_card_body">' +
+                                '<span class="syb_card_cat">' + syb_p.category + '</span>' +
+                                '<div class="syb_card_title">' + syb_p.title + '</div>' +
+                                '<div class="syb_card_price">$' + syb_p.price.toFixed(2) +
+                                    '<small>$' + syb_old + '</small></div>' +
+                                '<div class="syb_card_foot">' +
+                                    '<span class="syb_stars">' + syb_stars(syb_p.rating) + ' ' + syb_p.rating + '</span>' +
+                                    '<span class="' + syb_stockCls + '">库存 ' + syb_p.stock + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</a>';
+                    }
+                    document.getElementById("syb_grid").innerHTML = syb_html;
+                    document.getElementById("syb_tip").style.display = "block";
+                })
+                .catch(function (syb_e) {
+                    document.getElementById("syb_loading").style.display = "none";
+                    document.getElementById("syb_error").className = "syb_error syb_show";
+                    document.getElementById("syb_error").innerHTML =
+                        "<strong>请求失败：" + syb_e.message + "</strong><br>请检查网络后点击“重新请求”。";
+                    syb_setStatus("err", "请求失败");
+                });
+        }
+
+        syb_load();
+    </script>
+</body>
+</html>

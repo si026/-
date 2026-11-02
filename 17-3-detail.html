@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：商品详情页（根据 URL 参数 id 调用接口获取单个商品）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 商品详情</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_back_bar {
+            max-width: 1020px;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .syb_back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #3498db;
+        }
+        .syb_back:hover { color: #2980b9; text-decoration: underline; }
+
+        .syb_loading_box { max-width: 1020px; margin: 0 auto; text-align: center; padding: 80px 0; color: #7f8c8d; font-size: 14px; }
+        .syb_spinner {
+            width: 42px; height: 42px;
+            margin: 0 auto 14px;
+            border: 4px solid #dfe8f0;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: syb_spin 0.8s linear infinite;
+        }
+        @keyframes syb_spin { to { transform: rotate(360deg); } }
+
+        .syb_error {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fdecea;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.8;
+            display: none;
+        }
+        .syb_error.syb_show { display: block; }
+
+        /* 详情卡片 */
+        .syb_detail {
+            display: none;
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 26px;
+            animation: syb_in 0.35s ease;
+        }
+        .syb_detail.syb_show { display: block; }
+        @keyframes syb_in {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .syb_detail_body { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+
+        /* 左：图片画廊 */
+        .syb_main_img {
+            width: 100%;
+            height: 340px;
+            object-fit: contain;
+            border: 1px solid #f0f0f0;
+            border-radius: 10px;
+            background: #fafbfc;
+        }
+        .syb_thumbs { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+        .syb_thumb {
+            width: 66px; height: 66px;
+            object-fit: contain;
+            border: 2px solid #e8ecef;
+            border-radius: 8px;
+            background: #fafbfc;
+            cursor: pointer;
+            padding: 4px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .syb_thumb:hover { transform: translateY(-2px); }
+        .syb_thumb.syb_active { border-color: #3498db; }
+
+        /* 右：信息 */
+        .syb_p_cat {
+            display: inline-block;
+            font-size: 12px;
+            color: #2471a3;
+            background: #eaf4fc;
+            border-radius: 12px;
+            padding: 3px 12px;
+            margin-bottom: 10px;
+        }
+        .syb_p_brand { font-size: 12px; color: #8a8a8a; margin-bottom: 10px; }
+        .syb_p_title { font-size: 22px; font-weight: bold; color: #2c3e50; line-height: 1.5; }
+        .syb_p_rate { margin-top: 10px; font-size: 14px; color: #8a8a8a; }
+        .syb_stars { color: #f39c12; letter-spacing: 2px; font-size: 16px; }
+        .syb_price_row { margin: 16px 0; padding: 14px 16px; background: #fff6f5; border-radius: 10px; display: flex; align-items: baseline; gap: 12px; }
+        .syb_price { font-size: 30px; font-weight: bold; color: #e74c3c; }
+        .syb_price_old { font-size: 14px; color: #b2bec3; text-decoration: line-through; }
+        .syb_price_off { font-size: 12px; color: #fff; background: #e74c3c; border-radius: 10px; padding: 2px 10px; font-weight: bold; }
+        .syb_meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 20px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .syb_meta div { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px dashed #f0f0f0; }
+        .syb_meta b { font-weight: normal; color: #999; }
+        .syb_desc_title { font-size: 15px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; }
+        .syb_desc { font-size: 13px; color: #666; line-height: 1.9; }
+        .syb_tags { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .syb_tag {
+            font-size: 12px;
+            color: #7d6608;
+            background: #fff9e6;
+            border: 1px solid #f3e3ae;
+            border-radius: 12px;
+            padding: 3px 12px;
+        }
+
+        .syb_raw {
+            margin-top: 24px;
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+            color: #dfe6e9;
+        }
+        .syb_j_key { color: #f1c40f; }
+        .syb_j_str { color: #2ecc71; }
+        .syb_j_num { color: #74b9ff; }
+        .syb_j_bool { color: #e17055; }
+        .syb_j_null { color: #b2bec3; font-style: italic; }
+
+        @media (max-width: 800px) {
+            .syb_detail_body { grid-template-columns: 1fr; }
+            .syb_main_img { height: 240px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_back_bar">
+        <a class="syb_back" href="17-3.html">← 返回商品列表</a>
+    </div>
+
+    <div class="syb_loading_box" id="syb_loading">
+        <div class="syb_spinner"></div>
+        正在加载商品详情…
+    </div>
+
+    <div class="syb_error" id="syb_error"></div>
+
+    <div class="syb_detail" id="syb_detail">
+        <div class="syb_detail_body">
+            <!-- 左：图片画廊 -->
+            <div>
+                <img class="syb_main_img" id="syb_main_img" src="" alt="">
+                <div class="syb_thumbs" id="syb_thumbs"></div>
+            </div>
+            <!-- 右：商品信息 -->
+            <div>
+                <span class="syb_p_cat" id="syb_p_cat"></span>
+                <div class="syb_p_brand" id="syb_p_brand"></div>
+                <div class="syb_p_title" id="syb_p_title"></div>
+                <div class="syb_p_rate"><span class="syb_stars" id="syb_p_stars"></span> <span id="syb_p_rate_num"></span></div>
+                <div class="syb_price_row">
+                    <span class="syb_price" id="syb_price"></span>
+                    <span class="syb_price_old" id="syb_price_old"></span>
+                    <span class="syb_price_off" id="syb_price_off"></span>
+                </div>
+                <div class="syb_meta" id="syb_meta"></div>
+                <div class="syb_desc_title">商品描述</div>
+                <div class="syb_desc" id="syb_desc"></div>
+                <div class="syb_tags" id="syb_tags"></div>
+            </div>
+        </div>
+        <div class="syb_raw" id="syb_raw"></div>
+    </div>
+
+    <script>
+        var syb_api = "https://dummyjson.com/products/";
+
+        /* ============ 1. 从 URL 读取商品 id（列表页通过 ?id=xx 传过来） ============ */
+        function syb_getId() {
+            var syb_search = location.search;            // 形如 "?id=1"
+            var syb_m = syb_search.match(/[?&]id=(\d+)/);
+            if (syb_m) { return parseInt(syb_m[1], 10); }
+            return 1;                                    // 没有 id 参数时默认查看 1 号商品
+        }
+
+        /* ============ 2. JSON 高亮 ============ */
+        function syb_hl(syb_json) {
+            return syb_json
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+                    function (syb_m) {
+                        var syb_cls = "syb_j_num";
+                        if (syb_m.charAt(0) === "\"") {
+                            syb_cls = syb_m.charAt(syb_m.length - 1) === ":" ? "syb_j_key" : "syb_j_str";
+                        } else if (syb_m === "true" || syb_m === "false") {
+                            syb_cls = "syb_j_bool";
+                        } else if (syb_m === "null") {
+                            syb_cls = "syb_j_null";
+                        }
+                        return '<span class="' + syb_cls + '">' + syb_m + '</span>';
+                    });
+        }
+
+        function syb_stars(syb_rating) {
+            var syb_full = Math.round(syb_rating);
+            var syb_s = "";
+            for (var syb_i = 0; syb_i < 5; syb_i++) {
+                syb_s += syb_i < syb_full ? "★" : "☆";
+            }
+            return syb_s;
+        }
+
+        /* ============ 3. 点击缩略图切换主图 ============ */
+        function syb_switchImg(syb_src, syb_node) {
+            document.getElementById("syb_main_img").src = syb_src;
+            var syb_all = document.querySelectorAll(".syb_thumb");
+            for (var syb_i = 0; syb_i < syb_all.length; syb_i++) {
+                syb_all[syb_i].className = "syb_thumb";
+            }
+            syb_node.className = "syb_thumb syb_active";
+        }
+
+        /* ============ 4. 请求详情：GET /products/{id} ============ */
+        function syb_load() {
+            var syb_id = syb_getId();
+            document.title = "商品详情 #" + syb_id + " - 司雅博的JavaScript";
+
+            fetch(syb_api + syb_id)
+                .then(function (syb_r) {
+                    if (!syb_r.ok) { throw new Error("HTTP 状态码 " + syb_r.status + "（商品不存在？）"); }
+                    return syb_r.json();
+                })
+                .then(function (syb_p) {
+                    // 填充页面
+                    document.getElementById("syb_p_cat").innerHTML = "分类：" + syb_p.category;
+                    document.getElementById("syb_p_brand").innerHTML = "品牌：" + (syb_p.brand || "暂无");
+                    document.getElementById("syb_p_title").innerHTML = syb_p.title;
+                    document.getElementById("syb_p_stars").innerHTML = syb_stars(syb_p.rating);
+                    document.getElementById("syb_p_rate_num").innerHTML = syb_p.rating + " 分 / 5";
+                    document.getElementById("syb_price").innerHTML = "$" + syb_p.price.toFixed(2);
+                    document.getElementById("syb_price_old").innerHTML =
+                        "原价 $" + (syb_p.price / (1 - syb_p.discountPercentage / 100)).toFixed(2);
+                    document.getElementById("syb_price_off").innerHTML = "-" + syb_p.discountPercentage.toFixed(1) + "%";
+                    document.getElementById("syb_desc").innerHTML = syb_p.description;
+                    document.getElementById("syb_meta").innerHTML =
+                        "<div><b>商品编号</b><span>#" + syb_p.id + "</span></div>" +
+                        "<div><b>SKU 编码</b><span>" + (syb_p.sku || "-") + "</span></div>" +
+                        "<div><b>库存状态</b><span>" + (syb_p.availabilityStatus || "-") + "（" + syb_p.stock + " 件）</span></div>" +
+                        "<div><b>用户评分</b><span>" + syb_p.rating + " / 5</span></div>" +
+                        "<div><b>保修信息</b><span>" + (syb_p.warrantyInformation || "-") + "</span></div>" +
+                        "<div><b>退货政策</b><span>" + (syb_p.returnPolicy || "-") + "</span></div>";
+                    var syb_tagHtml = "";
+                    for (var syb_i = 0; syb_i < syb_p.tags.length; syb_i++) {
+                        syb_tagHtml += '<span class="syb_tag"># ' + syb_p.tags[syb_i] + "</span>";
+                    }
+                    document.getElementById("syb_tags").innerHTML = syb_tagHtml;
+
+                    // 图片画廊：主图 + 缩略图列表
+                    document.getElementById("syb_main_img").src = syb_p.thumbnail;
+                    var syb_thumbs = "";
+                    for (var syb_j = 0; syb_j < syb_p.images.length; syb_j++) {
+                        syb_thumbs += '<img class="syb_thumb' + (syb_j === 0 ? " syb_active" : "") +
+                            '" src="' + syb_p.images[syb_j] + '" alt="缩略图' + (syb_j + 1) +
+                            '" onclick="syb_switchImg(this.src, this)">';
+                    }
+                    document.getElementById("syb_thumbs").innerHTML = syb_thumbs;
+
+                    // 底部展示接口原始 JSON
+                    document.getElementById("syb_raw").innerHTML = syb_hl(JSON.stringify(syb_p, null, 4));
+
+                    document.getElementById("syb_loading").style.display = "none";
+                    document.getElementById("syb_detail").className = "syb_detail syb_show";
+                })
+                .catch(function (syb_e) {
+                    document.getElementById("syb_loading").style.display = "none";
+                    document.getElementById("syb_error").className = "syb_error syb_show";
+                    document.getElementById("syb_error").innerHTML =
+                        "<strong>加载失败：" + syb_e.message + "</strong><br>" +
+                        '请返回<a href="17-3.html" style="color:#2980b9;">商品列表</a>重新选择，或刷新本页重试。';
+                });
+        }
+
+        syb_load();
+    </script>
+</body>
+</html>

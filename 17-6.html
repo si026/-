@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：Promise 与 async/await 异步流程演示（包饺子：买原料 → 取原料 → 和面/和馅并行 → 包饺子 → 吃饺子）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— Promise 与 async/await：包饺子流程</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        /* ===== 流程图 ===== */
+        .syb_flow {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+        .syb_flow_row {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+        }
+        .syb_step {
+            flex: 1;
+            border: 2px solid #e8ecef;
+            border-radius: 10px;
+            padding: 14px 12px;
+            text-align: center;
+            position: relative;
+            background: #fafbfc;
+            transition: border-color 0.3s, background 0.3s, transform 0.3s;
+        }
+        .syb_step.syb_doing {
+            border-color: #3498db;
+            background: #f0f8ff;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 14px rgba(52, 152, 219, 0.25);
+        }
+        .syb_step.syb_ok { border-color: #27ae60; background: #f2fbf5; }
+        .syb_step.syb_parallel { border-style: dashed; }
+        .syb_step_name { font-size: 15px; font-weight: bold; color: #2c3e50; margin-top: 8px; }
+        .syb_step_time { font-size: 12px; color: #999; margin-top: 4px; font-family: Consolas, "Courier New", monospace; }
+        .syb_step_state {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 12px;
+            border-radius: 12px;
+            padding: 2px 12px;
+            background: #eef1f4;
+            color: #95a5a6;
+            font-family: Consolas, "Courier New", monospace;
+        }
+        .syb_step.syb_doing .syb_step_state { background: #3498db; color: #fff; animation: syb_blink 0.9s infinite; }
+        .syb_step.syb_ok .syb_step_state { background: #27ae60; color: #fff; }
+        @keyframes syb_blink { 50% { opacity: 0.55; } }
+
+        .syb_arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            color: #b2bec3;
+            font-size: 22px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        /* 并行分支 */
+        .syb_par_box { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .syb_par_label {
+            text-align: center;
+            font-size: 12px;
+            color: #8e44ad;
+            font-family: Consolas, "Courier New", monospace;
+        }
+        .syb_par_label b { background: #ede7f6; border-radius: 10px; padding: 2px 10px; font-weight: normal; }
+
+        /* ===== 代码与说明 ===== */
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 20px auto 0;
+        }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #8e44ad;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_green { border-top-color: #27ae60; }
+        .syb_card_title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .syb_card_title strong { font-size: 15px; color: #2c3e50; font-family: Consolas, "Courier New", monospace; }
+        .syb_badge {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: #8e44ad;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_codeblock {
+            background: #fdecea;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12.5px;
+            color: #c0392b;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .syb_desc { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e0e0e0; font-size: 13px; color: #666; line-height: 1.7; }
+
+        /* ===== 控制与日志 ===== */
+        .syb_console {
+            max-width: 1020px;
+            margin: 20px auto 0;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #e67e22;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 18px 20px;
+        }
+        .syb_btns { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .syb_btn {
+            border: none;
+            border-radius: 20px;
+            padding: 9px 22px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #fff;
+            background: #e67e22;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #d35400; transform: translateY(-2px); }
+        .syb_btn_gray { background: #95a5a6; }
+        .syb_btn_gray:hover { background: #7f8c8d; }
+        .syb_btn:disabled { background: #b8c4cc; cursor: not-allowed; transform: none; }
+        .syb_total {
+            margin-left: auto;
+            font-size: 14px;
+            color: #555;
+            font-family: Consolas, "Courier New", monospace;
+        }
+        .syb_total b { color: #e67e22; font-size: 18px; }
+
+        .syb_log {
+            margin-top: 14px;
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.9;
+            color: #dfe6e9;
+            height: 320px;
+            overflow-y: auto;
+        }
+        .syb_log_line { opacity: 0; animation: syb_fadein 0.4s forwards; }
+        @keyframes syb_fadein { to { opacity: 1; } }
+        .syb_l_time { color: #95a5a6; }
+        .syb_l_start { color: #74b9ff; }
+        .syb_l_done { color: #2ecc71; }
+        .syb_l_par { color: #e17055; }
+        .syb_l_end { color: #f1c40f; font-weight: bold; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_flow_row { flex-direction: column; gap: 10px; }
+            .syb_arrow { justify-content: center; transform: rotate(90deg); padding: 0; }
+            .syb_cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— Promise 与 async/await：包饺子</h1>
+        <p>用 setTimeout 模拟每道工序的耗时，async/await 串行排队，Promise.all 让"和面"与"和馅"同时进行</p>
+    </div>
+
+    <!-- 流程图 -->
+    <div class="syb_flow">
+        <div class="syb_flow_row">
+            <div class="syb_step" id="syb_step_buy">
+                <div class="syb_step_name">① 买原料</div>
+                <div class="syb_step_time">6 秒</div>
+                <div class="syb_step_state">等待中</div>
+            </div>
+            <div class="syb_arrow">→</div>
+            <div class="syb_step" id="syb_step_take">
+                <div class="syb_step_name">② 取原料</div>
+                <div class="syb_step_time">2 秒</div>
+                <div class="syb_step_state">等待中</div>
+            </div>
+            <div class="syb_arrow">→</div>
+            <div class="syb_par_box">
+                <div class="syb_par_label"><b>Promise.all 并行执行（同时开始）</b></div>
+                <div class="syb_step syb_parallel" id="syb_step_dough">
+                    <div class="syb_step_name">③a 和面</div>
+                    <div class="syb_step_time">4 秒</div>
+                    <div class="syb_step_state">等待中</div>
+                </div>
+                <div class="syb_step syb_parallel" id="syb_step_fill">
+                    <div class="syb_step_name">③b 和馅</div>
+                    <div class="syb_step_time">3 秒</div>
+                    <div class="syb_step_state">等待中</div>
+                </div>
+            </div>
+            <div class="syb_arrow">→</div>
+            <div class="syb_step" id="syb_step_wrap">
+                <div class="syb_step_name">④ 包饺子</div>
+                <div class="syb_step_time">5 秒</div>
+                <div class="syb_step_state">等待中</div>
+            </div>
+            <div class="syb_arrow">→</div>
+            <div class="syb_step" id="syb_step_eat">
+                <div class="syb_step_name">⑤ 吃饺子</div>
+                <div class="syb_step_time">3 秒</div>
+                <div class="syb_step_state">等待中</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心代码说明 -->
+    <div class="syb_cards">
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">1</span><strong>Promise + setTimeout：把"等待"变成可 await 的对象</strong></div>
+            <div class="syb_codeblock">// 用 setTimeout 模拟耗时工序，返回一个 Promise
+function syb_wait(syb_ms) {
+    return new Promise(function (syb_resolve) {
+        setTimeout(syb_resolve, syb_ms);   // 时间一到，状态从"等待"变"成功"
+    });
+}</div>
+            <div class="syb_desc">Promise 是"对未来结果的承诺"：new Promise 时任务开始，调用 resolve 时任务完成。有了它才能用 await 优雅地"等"。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">2</span><strong>async/await：异步代码写得像同步一样直白</strong></div>
+            <div class="syb_codeblock">async function syb_makeDumplings() {
+    await syb_step("buy",  6000);   // ① 买原料
+    await syb_step("take", 2000);   // ② 取原料
+    // ③ 和面、和馅互不依赖 → Promise.all 并行
+    await Promise.all([
+        syb_step("dough", 4000),
+        syb_step("fill",  3000)
+    ]);
+    await syb_step("wrap", 5000);   // ④ 包饺子
+    await syb_step("eat",  3000);   // ⑤ 吃饺子
+}</div>
+            <div class="syb_desc">await 会"等"Promise 完成再往下走；Promise.all 同时启动多个任务、等全部完成，比串行省 3 秒。</div>
+        </div>
+    </div>
+
+    <!-- 控制台 -->
+    <div class="syb_console">
+        <div class="syb_btns">
+            <button class="syb_btn" id="syb_start" onclick="syb_run()">开始包饺子</button>
+            <button class="syb_btn syb_btn_gray" id="syb_reset" onclick="syb_reset()">重置流程</button>
+            <span class="syb_total">总耗时：<b id="syb_total">--</b>（串行需 23 秒，并行节省 3 秒）</span>
+        </div>
+        <div class="syb_log" id="syb_log"><span style="color:#6b7f92;">// 点击"开始包饺子"，观察 async/await 的执行顺序与 Promise.all 的并行效果</span></div>
+    </div>
+
+    <div class="syb_note">
+        对比记忆：如果全部 <strong>await 串行</strong>，总耗时 = 6+2+4+3+5+3 = <strong>23 秒</strong>；
+        用 <strong>Promise.all 让和面、和馅并行</strong>后，总耗时 = 6+2+max(4,3)+5+3 = <strong>20 秒</strong>。
+        await 只能出现在 async 函数里；Promise 一旦完成（resolved）状态就不可再变。
+    </div>
+
+    <script>
+        /* ============ 工具：定时 Promise ============ */
+        function syb_wait(syb_ms) {
+            return new Promise(function (syb_resolve) {
+                setTimeout(syb_resolve, syb_ms);
+            });
+        }
+
+        var syb_startTime = 0;
+        var syb_running = false;
+
+        // 已流逝的秒数，保留 1 位小数
+        function syb_elapsed() {
+            return ((new Date().getTime() - syb_startTime) / 1000).toFixed(1);
+        }
+
+        function syb_addLog(syb_text, syb_cls) {
+            var syb_box = document.getElementById("syb_log");
+            var syb_line = document.createElement("div");
+            syb_line.className = "syb_log_line " + (syb_cls || "");
+            syb_line.innerHTML = '<span class="syb_l_time">[' + syb_elapsed() + 's]</span> ' + syb_text;
+            syb_box.appendChild(syb_line);
+            syb_box.scrollTop = syb_box.scrollHeight;   // 自动滚到底部
+        }
+
+        /* ============ 步骤状态更新 ============ */
+        function syb_stepStart(syb_key, syb_name) {
+            var syb_el = document.getElementById("syb_step_" + syb_key);
+            syb_el.className = syb_el.className.replace(" syb_ok", "").replace("syb_ok", "") + " syb_doing";
+            syb_el.querySelector(".syb_step_state").innerHTML = "进行中…";
+            syb_addLog(syb_name + " 开始（预计 " + syb_el.querySelector(".syb_step_time").innerHTML + "）", "syb_l_start");
+        }
+        function syb_stepDone(syb_key, syb_name) {
+            var syb_el = document.getElementById("syb_step_" + syb_key);
+            syb_el.className = syb_el.className.replace(" syb_doing", "").replace("syb_doing", "") + " syb_ok";
+            syb_el.querySelector(".syb_step_state").innerHTML = "完成 ✓";
+            syb_addLog(syb_name + " 完成！", "syb_l_done");
+        }
+
+        // 一道工序：开始 → 等 ms 毫秒 → 完成
+        async function syb_step(syb_key, syb_ms, syb_name) {
+            syb_stepStart(syb_key, syb_name);
+            await syb_wait(syb_ms);
+            syb_stepDone(syb_key, syb_name);
+        }
+
+        /* ============ 主流程：async 函数 ============ */
+        async function syb_makeDumplings() {
+            syb_startTime = new Date().getTime();
+            syb_running = true;
+            document.getElementById("syb_start").disabled = true;
+
+            // ① 买原料（6 秒）
+            await syb_step("buy", 6000, "① 买原料（面粉、肉馅、韭菜…）");
+            // ② 取原料（2 秒）
+            await syb_step("take", 2000, "② 取原料（把买回来的东西拿到厨房）");
+
+            // ③ 和面 / 和馅 互不依赖，Promise.all 同时开始
+            syb_addLog("③ 和面、和馅互不依赖 → 用 Promise.all 同时开工", "syb_l_par");
+            syb_stepStart("dough", "③a 和面");
+            syb_stepStart("fill", "③b 和馅");
+            await Promise.all([
+                syb_wait(4000).then(function () { syb_stepDone("dough", "③a 和面"); }),
+                syb_wait(3000).then(function () { syb_stepDone("fill", "③b 和馅"); })
+            ]);
+
+            // ④ 包饺子（5 秒）
+            await syb_step("wrap", 5000, "④ 擀皮包饺子");
+            // ⑤ 吃饺子（3 秒）
+            await syb_step("eat", 3000, "⑤ 下锅煮好，开吃！");
+
+            var syb_total = syb_elapsed();
+            syb_addLog("全部完成！饺子真香~ 总耗时 " + syb_total + " 秒（串行需 23 秒）", "syb_l_end");
+            document.getElementById("syb_total").innerHTML = syb_total + " 秒";
+            syb_running = false;
+            document.getElementById("syb_start").disabled = false;
+        }
+
+        function syb_run() {
+            if (syb_running) { return; }
+            syb_reset();
+            syb_addLog("async 函数 syb_makeDumplings() 开始执行", "syb_l_start");
+            syb_makeDumplings();
+        }
+
+        function syb_reset() {
+            var syb_keys = ["buy", "take", "dough", "fill", "wrap", "eat"];
+            for (var syb_i = 0; syb_i < syb_keys.length; syb_i++) {
+                var syb_el = document.getElementById("syb_step_" + syb_keys[syb_i]);
+                syb_el.className = syb_el.className
+                    .replace(" syb_doing", "").replace("syb_doing", "")
+                    .replace(" syb_ok", "").replace("syb_ok", "");
+                // 并行分支卡片保留虚线样式
+                if (syb_keys[syb_i] === "dough" || syb_keys[syb_i] === "fill") {
+                    syb_el.className += " syb_parallel";
+                }
+                syb_el.querySelector(".syb_step_state").innerHTML = "等待中";
+            }
+            document.getElementById("syb_total").innerHTML = "--";
+            document.getElementById("syb_log").innerHTML =
+                '<span style="color:#6b7f92;">// 点击"开始包饺子"，观察 async/await 的执行顺序与 Promise.all 的并行效果</span>';
+        }
+    </script>
+</body>
+</html>

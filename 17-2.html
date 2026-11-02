@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：fetch 获取网络接口数据并展示（jsonplaceholder /posts）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— fetch 获取接口数据并展示</title>
+    <!-- 本地 iconfont 图标（font 目录） -->
+    <link rel="stylesheet" href="font/download/font_5244786_pxfjas306hj/iconfont.css">
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 24px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+        .syb_header .syb_url {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 16px;
+            background: #2c3e50;
+            color: #2ecc71;
+            border-radius: 18px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+        }
+
+        .syb_toolbar {
+            max-width: 1020px;
+            margin: 0 auto 18px;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .syb_status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+        .syb_dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #95a5a6;
+            flex-shrink: 0;
+        }
+        .syb_dot.syb_loading { background: #f39c12; animation: syb_blink 0.8s infinite; }
+        .syb_dot.syb_ok { background: #27ae60; }
+        .syb_dot.syb_err { background: #e74c3c; }
+        @keyframes syb_blink { 50% { opacity: 0.3; } }
+        .syb_toolbar_right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .syb_search {
+            width: 220px;
+            height: 38px;
+            border: 1px solid #dcdfe4;
+            border-radius: 19px;
+            padding: 0 16px;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+        .syb_search:focus { border-color: #3498db; }
+        .syb_btn {
+            border: none;
+            border-radius: 19px;
+            height: 38px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .syb_btn_gray { background: #95a5a6; }
+        .syb_btn_gray:hover { background: #7f8c8d; }
+        .syb_btn:disabled { background: #b8c4cc; cursor: not-allowed; transform: none; }
+
+        /* 加载动画 */
+        .syb_loading_box {
+            max-width: 1020px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 60px 0;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .syb_spinner {
+            width: 42px; height: 42px;
+            margin: 0 auto 14px;
+            border: 4px solid #dfe8f0;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: syb_spin 0.8s linear infinite;
+        }
+        @keyframes syb_spin { to { transform: rotate(360deg); } }
+
+        /* 文章卡片 */
+        .syb_grid {
+            max-width: 1020px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+        .syb_post {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 18px;
+            animation: syb_in 0.35s ease;
+        }
+        @keyframes syb_in {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .syb_post_tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #7f8c8d;
+            background: #f4f6f8;
+            border-radius: 12px;
+            padding: 3px 10px;
+            margin-bottom: 10px;
+        }
+        .syb_post_tag .iconfont { font-size: 13px; color: #3498db; }
+        .syb_post_title { font-size: 15px; font-weight: bold; color: #2c3e50; line-height: 1.5; margin-bottom: 8px; }
+        .syb_post_body { font-size: 13px; color: #8a8a8a; line-height: 1.7; }
+        .syb_post_more { display: inline-block; margin-top: 10px; font-size: 12px; color: #3498db; cursor: pointer; }
+        .syb_post_more:hover { text-decoration: underline; }
+
+        /* 分页 */
+        .syb_pager {
+            max-width: 1020px;
+            margin: 20px auto 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            font-size: 14px;
+            color: #555;
+        }
+        .syb_pager b { color: #2980b9; }
+
+        /* 原始 JSON */
+        .syb_raw {
+            max-width: 1020px;
+            margin: 26px auto 0;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #8e44ad;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 18px 20px;
+        }
+        .syb_raw h3 { font-size: 15px; color: #2c3e50; margin-bottom: 10px; }
+        .syb_json {
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+            color: #dfe6e9;
+        }
+        .syb_j_key { color: #f1c40f; }
+        .syb_j_str { color: #2ecc71; }
+        .syb_j_num { color: #74b9ff; }
+        .syb_j_bool { color: #e17055; }
+        .syb_j_null { color: #b2bec3; font-style: italic; }
+
+        .syb_error {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fdecea;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.8;
+            display: none;
+        }
+        .syb_error.syb_show { display: block; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_grid { grid-template-columns: 1fr; }
+            .syb_search { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— fetch 获取接口数据并展示</h1>
+        <p>使用原生 fetch 请求公开测试接口，拿到 JSON 数据后解析、搜索、分页并渲染成卡片</p>
+        <span class="syb_url">GET https://jsonplaceholder.typicode.com/posts</span>
+    </div>
+
+    <!-- 工具栏：状态 + 搜索 + 刷新 -->
+    <div class="syb_toolbar">
+        <div class="syb_status">
+            <span class="syb_dot" id="syb_dot"></span>
+            <span id="syb_status_text">等待请求…</span>
+        </div>
+        <div class="syb_toolbar_right">
+            <input class="syb_search" id="syb_search" type="text" placeholder="按标题 / 内容搜索…" oninput="syb_onSearch()">
+            <button class="syb_btn" onclick="syb_load()">重新请求</button>
+        </div>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="syb_loading_box" id="syb_loading">
+        <div class="syb_spinner"></div>
+        正在请求接口数据，请稍候…
+    </div>
+
+    <!-- 错误提示 -->
+    <div class="syb_error" id="syb_error"></div>
+
+    <!-- 数据卡片 -->
+    <div class="syb_grid" id="syb_grid"></div>
+
+    <!-- 分页 -->
+    <div class="syb_pager" id="syb_pager" style="display: none;">
+        <button class="syb_btn syb_btn_gray" id="syb_prev" onclick="syb_goPage(-1)">上一页</button>
+        <span>第 <b id="syb_page_now">1</b> / <b id="syb_page_all">1</b> 页 ｜ 共 <b id="syb_total">0</b> 条</span>
+        <button class="syb_btn syb_btn_gray" id="syb_next" onclick="syb_goPage(1)">下一页</button>
+    </div>
+
+    <!-- 原始 JSON -->
+    <div class="syb_raw" id="syb_raw_box" style="display: none;">
+        <h3>接口返回的第 1 条原始数据（JSON.parse 之前是字符串，之后才能这样访问属性）</h3>
+        <div class="syb_json" id="syb_raw"></div>
+    </div>
+
+    <div class="syb_note">
+        要点：<strong>fetch(url) 返回 Promise → .then(r =&gt; r.json()) 解析 JSON → .then 渲染页面，.catch 统一处理网络错误</strong>。
+        r.ok 可以判断 HTTP 状态码是否为 2xx；搜索和分页都是在前端对已拿到的数组做 filter / slice，不再重复发请求。
+    </div>
+
+    <script>
+        var syb_api = "https://jsonplaceholder.typicode.com/posts";
+        var syb_state = {
+            data: [],      // 接口返回的全部数据
+            page: 1,       // 当前页码
+            size: 9,       // 每页条数
+            keyword: "",   // 搜索关键词
+            ms: 0          // 请求耗时
+        };
+
+        /* ============ JSON 高亮 ============ */
+        function syb_hl(syb_json) {
+            return syb_json
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+                    function (syb_m) {
+                        var syb_cls = "syb_j_num";
+                        if (syb_m.charAt(0) === "\"") {
+                            syb_cls = syb_m.charAt(syb_m.length - 1) === ":" ? "syb_j_key" : "syb_j_str";
+                        } else if (syb_m === "true" || syb_m === "false") {
+                            syb_cls = "syb_j_bool";
+                        } else if (syb_m === "null") {
+                            syb_cls = "syb_j_null";
+                        }
+                        return '<span class="' + syb_cls + '">' + syb_m + '</span>';
+                    });
+        }
+
+        /* ============ 状态提示 ============ */
+        function syb_setStatus(syb_type, syb_text) {
+            var syb_dot = document.getElementById("syb_dot");
+            syb_dot.className = "syb_dot" + (syb_type ? " syb_" + syb_type : "");
+            document.getElementById("syb_status_text").innerHTML = syb_text;
+        }
+
+        /* ============ 请求接口 ============ */
+        function syb_load() {
+            // 1. 显示加载动画，隐藏旧数据
+            document.getElementById("syb_loading").style.display = "block";
+            document.getElementById("syb_grid").innerHTML = "";
+            document.getElementById("syb_pager").style.display = "none";
+            document.getElementById("syb_raw_box").style.display = "none";
+            document.getElementById("syb_error").className = "syb_error";
+            syb_setStatus("loading", "正在请求 " + syb_api + " …");
+
+            var syb_start = new Date().getTime();
+
+            fetch(syb_api)
+                .then(function (syb_r) {
+                    // r.ok：HTTP 状态码为 200~299
+                    if (!syb_r.ok) {
+                        throw new Error("HTTP 状态码 " + syb_r.status);
+                    }
+                    return syb_r.json();   // 把响应体解析成 JS 对象
+                })
+                .then(function (syb_list) {
+                    // 2. 请求成功
+                    syb_state.data = syb_list;
+                    syb_state.page = 1;
+                    syb_state.ms = new Date().getTime() - syb_start;
+                    document.getElementById("syb_loading").style.display = "none";
+                    syb_setStatus("ok", "请求成功：HTTP 200，返回 " + syb_list.length +
+                        " 条数据，耗时 " + syb_state.ms + " ms");
+                    // 展示第一条原始 JSON
+                    document.getElementById("syb_raw").innerHTML = syb_hl(JSON.stringify(syb_list[0], null, 4));
+                    document.getElementById("syb_raw_box").style.display = "block";
+                    syb_render();
+                })
+                .catch(function (syb_e) {
+                    // 3. 统一错误处理：断网、跨域被拒、状态码异常等都会进入这里
+                    document.getElementById("syb_loading").style.display = "none";
+                    document.getElementById("syb_error").className = "syb_error syb_show";
+                    document.getElementById("syb_error").innerHTML =
+                        "<strong>请求失败：" + syb_e.message + "</strong><br>请检查网络连接后，点击上方“重新请求”再试一次。";
+                    syb_setStatus("err", "请求失败");
+                });
+        }
+
+        /* ============ 渲染当前页 ============ */
+        function syb_filtered() {
+            var syb_kw = syb_state.keyword.toLowerCase();
+            if (syb_kw === "") { return syb_state.data; }
+            var syb_out = [];
+            for (var syb_i = 0; syb_i < syb_state.data.length; syb_i++) {
+                var syb_p = syb_state.data[syb_i];
+                if (syb_p.title.toLowerCase().indexOf(syb_kw) >= 0 ||
+                    syb_p.body.toLowerCase().indexOf(syb_kw) >= 0) {
+                    syb_out.push(syb_p);
+                }
+            }
+            return syb_out;
+        }
+
+        function syb_render() {
+            var syb_list = syb_filtered();
+            var syb_pages = Math.max(1, Math.ceil(syb_list.length / syb_state.size));
+            if (syb_state.page > syb_pages) { syb_state.page = syb_pages; }
+            var syb_start = (syb_state.page - 1) * syb_state.size;
+            var syb_pageList = syb_list.slice(syb_start, syb_start + syb_state.size);   // 数组截取当前页
+
+            var syb_html = "";
+            for (var syb_i = 0; syb_i < syb_pageList.length; syb_i++) {
+                var syb_p = syb_pageList[syb_i];
+                var syb_body = syb_p.body.replace(/\n/g, " ");
+                syb_html += '<div class="syb_post">' +
+                    '<span class="syb_post_tag"><span class="iconfont icon-wangluo"></span>POST #' + syb_p.id +
+                    ' · 用户 ' + syb_p.userId + '</span>' +
+                    '<div class="syb_post_title">' + syb_p.title + '</div>' +
+                    '<div class="syb_post_body">' + syb_body.substring(0, 90) + '…</div>' +
+                    '<span class="syb_post_more" onclick="syb_alertPost(' + syb_p.id + ')">查看完整内容 »</span>' +
+                    '</div>';
+            }
+            document.getElementById("syb_grid").innerHTML = syb_html;
+
+            // 分页信息
+            document.getElementById("syb_pager").style.display = "flex";
+            document.getElementById("syb_page_now").innerHTML = syb_state.page;
+            document.getElementById("syb_page_all").innerHTML = syb_pages;
+            document.getElementById("syb_total").innerHTML = syb_list.length;
+            document.getElementById("syb_prev").disabled = syb_state.page <= 1;
+            document.getElementById("syb_next").disabled = syb_state.page >= syb_pages;
+        }
+
+        function syb_goPage(syb_step) {
+            syb_state.page += syb_step;
+            syb_render();
+            window.scrollTo(0, 0);
+        }
+
+        function syb_onSearch() {
+            syb_state.keyword = document.getElementById("syb_search").value;
+            syb_state.page = 1;   // 搜索后回到第一页
+            syb_render();
+        }
+
+        /* ============ 查看单条完整内容 ============ */
+        function syb_alertPost(syb_id) {
+            // 点击卡片时再发一次 fetch：/posts/{id}，演示带路径参数的请求
+            fetch(syb_api + "/" + syb_id)
+                .then(function (syb_r) { return syb_r.json(); })
+                .then(function (syb_p) {
+                    document.getElementById("syb_raw").innerHTML =
+                        syb_hl(JSON.stringify(syb_p, null, 4));
+                    document.getElementById("syb_raw_box").style.display = "block";
+                    document.getElementById("syb_raw_box").scrollIntoView({ behavior: "smooth" });
+                    syb_setStatus("ok", "已加载 POST #" + syb_id + " 的完整数据（GET " + syb_api + "/" + syb_id + "）");
+                })
+                .catch(function (syb_e) {
+                    syb_setStatus("err", "请求失败：" + syb_e.message);
+                });
+        }
+
+        // 页面打开即请求
+        syb_load();
+    </script>
+</body>
+</html>

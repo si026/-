@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：JSON 展示页（语法规则 / parse 与 stringify / 在线格式化校验 / 实战渲染）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— JSON 展示</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_section_title {
+            max-width: 1020px;
+            margin: 30px auto 14px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .syb_badge {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_green { border-top-color: #27ae60; }
+        .syb_card_purple { border-top-color: #8e44ad; }
+        .syb_card_orange { border-top-color: #e67e22; }
+        .syb_card_title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; }
+        .syb_desc { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e0e0e0; font-size: 13px; color: #666; line-height: 1.6; }
+
+        /* JSON 高亮代码块 */
+        .syb_json {
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+            color: #dfe6e9;
+        }
+        .syb_j_key { color: #f1c40f; }
+        .syb_j_str { color: #2ecc71; }
+        .syb_j_num { color: #74b9ff; }
+        .syb_j_bool { color: #e17055; }
+        .syb_j_null { color: #b2bec3; font-style: italic; }
+
+        .syb_codeblock {
+            background: #fdecea;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #c0392b;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .syb_result_row { margin-top: 12px; font-size: 13px; line-height: 1.7; }
+        .syb_result { color: #2980b9; font-family: Consolas, "Courier New", monospace; font-weight: bold; }
+
+        /* 类型标签 */
+        .syb_chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .syb_chip {
+            padding: 6px 12px;
+            border-radius: 16px;
+            background: #eaf4fc;
+            color: #2471a3;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+        }
+        .syb_chip b { font-weight: normal; color: #7f8c8d; font-family: "Microsoft YaHei", sans-serif; }
+
+        /* 对错对照 */
+        .syb_vs_row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .syb_bad_code, .syb_good_code {
+            flex: 1;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre;
+        }
+        .syb_bad_code { background: #fdecea; color: #c0392b; }
+        .syb_good_code { background: #e8f8f0; color: #1e8449; }
+        .syb_mark { font-weight: bold; }
+        .syb_mark_no { color: #e74c3c; }
+        .syb_mark_ok { color: #27ae60; }
+
+        /* 格式化工具 */
+        .syb_tool {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #8e44ad;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_tool_body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .syb_tool_label { font-size: 13px; color: #7f8c8d; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        #syb_input {
+            width: 100%;
+            height: 240px;
+            border: 1px solid #dcdfe4;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #2c3e50;
+            resize: vertical;
+            outline: none;
+        }
+        #syb_input:focus { border-color: #8e44ad; }
+        .syb_btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .syb_btn {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-family: "Microsoft YaHei", sans-serif;
+            color: #fff;
+            background: #8e44ad;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #71368a; transform: translateY(-2px); }
+        .syb_btn_gray { background: #95a5a6; }
+        .syb_btn_gray:hover { background: #7f8c8d; }
+        .syb_tool_msg {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: Consolas, "Courier New", monospace;
+            display: none;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+        .syb_tool_msg.syb_ok { display: block; background: #e8f8f0; color: #1e8449; border: 1px solid #bfe8cd; }
+        .syb_tool_msg.syb_err { display: block; background: #fdecea; color: #c0392b; border: 1px solid #f5c2c2; }
+
+        /* 成绩表 */
+        .syb_table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+        .syb_table th, .syb_table td { padding: 9px 12px; text-align: center; border-bottom: 1px solid #f1f2f6; }
+        .syb_table th { background: #eaf4fc; color: #2471a3; }
+        .syb_table tr.syb_avg td { background: #fff9e6; color: #7d6608; font-weight: bold; }
+        .syb_table td:first-child { font-weight: bold; color: #2c3e50; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_cards { grid-template-columns: 1fr; }
+            .syb_tool_body { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— JSON 展示</h1>
+        <p>JSON（JavaScript Object Notation）是一种轻量级的数据交换格式：长得像 JS 对象，本质是"字符串"，是前后端传数据的通用语言</p>
+    </div>
+
+    <!-- ==================== A. 六种值类型 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">A</span>JSON 的六种值类型</div>
+    <div class="syb_cards">
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">1</span><strong>合法的值</strong></div>
+            <div class="syb_chips">
+                <span class="syb_chip">"字符串" <b>双引号</b></span>
+                <span class="syb_chip">20 <b>数字</b></span>
+                <span class="syb_chip">true / false <b>布尔</b></span>
+                <span class="syb_chip">null <b>空</b></span>
+                <span class="syb_chip">{ } <b>对象</b></span>
+                <span class="syb_chip">[ ] <b>数组</b></span>
+            </div>
+            <div class="syb_desc">一个合法的 JSON 顶层只能是这六种之一，最常用的是对象和数组；键名必须用双引号包住。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">2</span><strong>一个典型的 JSON</strong></div>
+            <div class="syb_json" id="syb_demo1"></div>
+            <div class="syb_desc">对象套数组、数组套对象都很常见；注意没有注释、没有尾逗号、键全部双引号。</div>
+        </div>
+        <div class="syb_card">
+            <div class="syb_card_title"><span class="syb_badge">3</span><strong>常见错误对照</strong></div>
+            <div class="syb_vs_row">
+                <div class="syb_bad_code"><span class="syb_mark syb_mark_no">✗</span> {name: "司雅博"}</div>
+                <div class="syb_good_code"><span class="syb_mark syb_mark_ok">✓</span> {"name": "司雅博"}</div>
+            </div>
+            <div class="syb_vs_row">
+                <div class="syb_bad_code"><span class="syb_mark syb_mark_no">✗</span> {'age': 20,}</div>
+                <div class="syb_good_code"><span class="syb_mark syb_mark_ok">✓</span> {"age": 20}</div>
+            </div>
+            <div class="syb_vs_row">
+                <div class="syb_bad_code"><span class="syb_mark syb_mark_no">✗</span> {"fn": function(){}}</div>
+                <div class="syb_good_code"><span class="syb_mark syb_mark_ok">✓</span> {"score": null}</div>
+            </div>
+            <div class="syb_desc">键不能用单引号或裸键名；不能有尾逗号；不能放函数、undefined、注释。</div>
+        </div>
+    </div>
+
+    <!-- ==================== B. JSON 与 JS 对象互转 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">B</span>JSON.parse 与 JSON.stringify（互转）</div>
+    <div class="syb_cards">
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">4</span><strong>JSON.stringify：对象 → JSON 字符串</strong></div>
+            <div class="syb_codeblock">var syb_stu = { name: "司雅博", age: 20,
+    skills: ["HTML", "CSS", "JS"],
+    phone: null };
+var syb_text = JSON.stringify(syb_stu, null, 4);</div>
+            <div class="syb_result_row">序列化结果：</div>
+            <div class="syb_json" id="syb_demo2"></div>
+            <div class="syb_desc">第 2 个参数是过滤器（常用 null），第 3 个参数是缩进空格数，用来"美化"输出。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">5</span><strong>JSON.parse：JSON 字符串 → 对象</strong></div>
+            <div class="syb_codeblock">var syb_obj = JSON.parse(syb_text);
+syb_obj.skills[0];   // "HTML"</div>
+            <div class="syb_result_row">parse 之后就能像普通对象一样访问：skills[0] = <span class="syb_result" id="syb_r_skill"></span>，age + 1 = <span class="syb_result" id="syb_r_age"></span></div>
+            <div class="syb_desc">parse 会严格按 JSON 语法检查字符串，不合法会直接抛错（所以常配 try...catch）。</div>
+        </div>
+        <div class="syb_card syb_card_green">
+            <div class="syb_card_title"><span class="syb_badge">6</span><strong>stringify 会"丢弃"的东西</strong></div>
+            <div class="syb_codeblock">JSON.stringify({
+    a: undefined,          // 丢失
+    b: function () {},     // 丢失
+    c: new Date(),         // 变成字符串
+    d: NaN, e: Infinity    // 变成 null
+});</div>
+            <div class="syb_result_row">结果：<span class="syb_result" id="syb_r_loss"></span></div>
+            <div class="syb_desc">undefined 和函数会被直接删掉，NaN / Infinity 变成 null —— 这是序列化的隐藏坑。</div>
+        </div>
+    </div>
+
+    <!-- ==================== C. 在线格式化 / 校验工具 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">C</span>JSON 格式化 · 校验小工具（实时运行）</div>
+    <div class="syb_tool">
+        <div class="syb_tool_body">
+            <div>
+                <div class="syb_tool_label"><span>输入 JSON（可随意修改）</span><span id="syb_len_tip"></span></div>
+                <textarea id="syb_input" spellcheck="false"></textarea>
+                <div class="syb_btns">
+                    <button class="syb_btn" onclick="syb_format()">格式化（美化）</button>
+                    <button class="syb_btn syb_btn_gray" onclick="syb_minify()">压缩成一行</button>
+                    <button class="syb_btn syb_btn_gray" onclick="syb_resetInput()">恢复示例</button>
+                </div>
+                <div class="syb_tool_msg" id="syb_msg"></div>
+            </div>
+            <div>
+                <div class="syb_tool_label"><span>输出结果</span></div>
+                <div class="syb_json" id="syb_output" style="height: 240px; overflow: auto;">// 点击左侧"格式化"查看结果</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== D. 实战：解析接口数据并渲染 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">D</span>实战：前端拿到接口返回的 JSON，渲染成表格</div>
+    <div class="syb_cards" style="grid-template-columns: 1fr;">
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">7</span><strong>模拟接口返回 → JSON.parse → 渲染成绩表</strong></div>
+            <div class="syb_json" id="syb_api_raw"></div>
+            <div class="syb_desc">接口返回的是一串"长得像对象"的字符串，必须 parse 成对象后才能用下标、属性去访问。</div>
+            <table class="syb_table">
+                <thead>
+                    <tr><th>姓名</th><th>学号</th><th>HTML</th><th>CSS</th><th>JavaScript</th><th>平均分</th></tr>
+                </thead>
+                <tbody id="syb_table_body"></tbody>
+            </table>
+            <div class="syb_desc" id="syb_table_tip"></div>
+        </div>
+    </div>
+
+    <div class="syb_note">
+        记忆口诀：<strong>stringify 是"打包发货"（对象 → 字符串），parse 是"签收拆包"（字符串 → 对象）</strong>。
+        JSON 三条铁律：键名双引号、不许写注释和尾逗号、值只有六种。前端所有接口数据（fetch / ajax 返回）几乎都是 JSON，
+        所以 JSON.parse + JSON.stringify 是最常用的两个全局方法。
+    </div>
+
+    <script>
+        /* ============ JSON 高亮：给格式化后的 JSON 文本上色 ============ */
+        function syb_hl(syb_json) {
+            return syb_json
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+                    function (syb_m) {
+                        var syb_cls = "syb_j_num";
+                        if (syb_m.charAt(0) === "\"") {
+                            syb_cls = syb_m.charAt(syb_m.length - 1) === ":" ? "syb_j_key" : "syb_j_str";
+                        } else if (syb_m === "true" || syb_m === "false") {
+                            syb_cls = "syb_j_bool";
+                        } else if (syb_m === "null") {
+                            syb_cls = "syb_j_null";
+                        }
+                        return '<span class="' + syb_cls + '">' + syb_m + '</span>';
+                    });
+        }
+        function syb_fill(syb_id, syb_html) {
+            document.getElementById(syb_id).innerHTML = syb_html;
+        }
+
+        /* ============ A 区：示例 JSON ============ */
+        var syb_demoObj = {
+            name: "司雅博",
+            sid: 24001011026,
+            isVip: false,
+            scores: [92, 88, 95],
+            contact: { qq: "24001011026", email: null }
+        };
+        syb_fill("syb_demo1", syb_hl(JSON.stringify(syb_demoObj, null, 4)));
+
+        /* ============ B 区：互转演示 ============ */
+        var syb_text = JSON.stringify(syb_demoObj, null, 4);
+        syb_fill("syb_demo2", syb_hl(syb_text));
+
+        var syb_obj = JSON.parse(syb_text);
+        syb_fill("syb_r_skill", syb_obj.skills[0]);
+        syb_fill("syb_r_age", syb_obj.age + 1);
+
+        syb_fill("syb_r_loss", JSON.stringify({
+            a: undefined,
+            b: function () {},
+            c: new Date(0),
+            d: NaN,
+            e: Infinity
+        }));
+
+        /* ============ C 区：格式化 / 校验工具 ============ */
+        var syb_sampleText = JSON.stringify(syb_demoObj, null, 4);
+        function syb_resetInput() {
+            document.getElementById("syb_input").value = syb_sampleText;
+            syb_format();
+        }
+        function syb_showMsg(syb_ok, syb_text) {
+            var syb_msg = document.getElementById("syb_msg");
+            syb_msg.className = "syb_tool_msg " + (syb_ok ? "syb_ok" : "syb_err");
+            syb_msg.innerHTML = syb_text;
+        }
+        // 公共步骤：取出输入并尝试解析，成功返回对象，失败返回 null
+        function syb_tryParse() {
+            var syb_src = document.getElementById("syb_input").value;
+            document.getElementById("syb_len_tip").innerHTML = "字符数：" + syb_src.length;
+            try {
+                return { ok: true, data: JSON.parse(syb_src) };
+            } catch (syb_e) {
+                return { ok: false, msg: String(syb_e.message) };
+            }
+        }
+        function syb_format() {
+            var syb_r = syb_tryParse();
+            if (!syb_r.ok) {
+                syb_showMsg(false, "✗ 不是合法的 JSON！<br>" + syb_r.msg);
+                return;
+            }
+            syb_fill("syb_output", syb_hl(JSON.stringify(syb_r.data, null, 4)));
+            syb_showMsg(true, "✓ 解析成功！合法的 JSON，已按 4 空格缩进美化");
+        }
+        function syb_minify() {
+            var syb_r = syb_tryParse();
+            if (!syb_r.ok) {
+                syb_showMsg(false, "✗ 不是合法的 JSON！<br>" + syb_r.msg);
+                return;
+            }
+            syb_fill("syb_output", syb_hl(JSON.stringify(syb_r.data)));
+            syb_showMsg(true, "✓ 已压缩成一行，字符数从 " + document.getElementById("syb_input").value.length +
+                " 减到 " + JSON.stringify(syb_r.data).length + "（传输更省流量）");
+        }
+
+        /* ============ D 区：实战渲染成绩表 ============ */
+        var syb_apiJson = '{"clazz":"高级网页设计","students":[' +
+            '{"name":"司雅博","sid":24001011026,"scores":[92,88,95]},' +
+            '{"name":"王小明","sid":24001011027,"scores":[78,85,80]},' +
+            '{"name":"李小红","sid":24001011028,"scores":[65,72,90]}]}';
+
+        syb_fill("syb_api_raw", syb_hl(JSON.stringify(JSON.parse(syb_apiJson), null, 4)) +
+            '<span style="color:#95a5a6;">  // ↑ 这只是"长得像对象"的字符串</span>');
+
+        var syb_apiData = JSON.parse(syb_apiJson);   // 拆包：字符串 → 对象
+        var syb_rowsHtml = "";
+        var syb_allSum = 0, syb_allCount = 0;
+        for (var syb_i = 0; syb_i < syb_apiData.students.length; syb_i++) {
+            var syb_s = syb_apiData.students[syb_i];
+            var syb_sum = 0;
+            for (var syb_j = 0; syb_j < syb_s.scores.length; syb_j++) {
+                syb_sum += syb_s.scores[syb_j];
+            }
+            syb_allSum += syb_sum;
+            syb_allCount += syb_s.scores.length;
+            syb_rowsHtml += "<tr><td>" + syb_s.name + "</td><td>" + syb_s.sid + "</td>" +
+                "<td>" + syb_s.scores[0] + "</td><td>" + syb_s.scores[1] + "</td><td>" + syb_s.scores[2] + "</td>" +
+                "<td>" + (syb_sum / syb_s.scores.length).toFixed(1) + "</td></tr>";
+        }
+        syb_rowsHtml += '<tr class="syb_avg"><td colspan="5">全班平均分</td><td>' +
+            (syb_allSum / syb_allCount).toFixed(1) + "</td></tr>";
+        syb_fill("syb_table_body", syb_rowsHtml);
+        syb_fill("syb_table_tip", "解析出 " + syb_apiData.students.length +
+            " 名学生，班级名称：" + syb_apiData.clazz + "（访问方式和普通对象完全一样）");
+
+        // 初始化工具区
+        syb_resetInput();
+    </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.02
+使用的大模型：CodeBuddy Auto
+功能名称：JavaScript 两种定时器展示（setTimeout 一次性 / setInterval 周期性）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 两种定时器：setTimeout 与 setInterval</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 26px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_section_title {
+            max-width: 1020px;
+            margin: 30px auto 14px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .syb_badge {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 1020px;
+            margin: 0 auto;
+        }
+        .syb_card {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_orange { border-top-color: #e67e22; }
+        .syb_card_purple { border-top-color: #8e44ad; }
+        .syb_card_title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; font-family: Consolas, "Courier New", monospace; }
+        .syb_codeblock {
+            background: #fdecea;
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #c0392b;
+            line-height: 1.7;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .syb_desc {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .syb_btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+        .syb_btn {
+            border: none;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .syb_btn_orange { background: #e67e22; }
+        .syb_btn_orange:hover { background: #d35400; }
+        .syb_btn_gray { background: #95a5a6; }
+        .syb_btn_gray:hover { background: #7f8c8d; }
+        .syb_btn:disabled { background: #b8c4cc; cursor: not-allowed; transform: none; }
+
+        /* 倒计时 */
+        .syb_count_num {
+            text-align: center;
+            font-size: 72px;
+            font-weight: 800;
+            font-family: Consolas, "Courier New", monospace;
+            color: #e67e22;
+            line-height: 1.2;
+            min-height: 92px;
+        }
+        .syb_count_num.syb_done { color: #27ae60; font-size: 34px; padding-top: 24px; }
+        .syb_count_num.syb_cancel { color: #b2bec3; font-size: 30px; padding-top: 28px; }
+
+        /* 事件循环日志 */
+        .syb_log {
+            margin-top: 14px;
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #dfe6e9;
+            min-height: 118px;
+        }
+        .syb_log_line { opacity: 0; animation: syb_fadein 0.4s forwards; }
+        @keyframes syb_fadein { to { opacity: 1; } }
+        .syb_l_sync { color: #74b9ff; }
+        .syb_l_timer { color: #2ecc71; }
+        .syb_l_time { color: #95a5a6; }
+
+        /* 数字时钟 */
+        .syb_clock {
+            text-align: center;
+            font-size: 44px;
+            font-weight: 800;
+            font-family: Consolas, "Courier New", monospace;
+            color: #8e44ad;
+            letter-spacing: 2px;
+            padding: 18px 0;
+            background: #f7f2fb;
+            border-radius: 10px;
+            margin-top: 14px;
+        }
+        .syb_clock small { font-size: 20px; color: #b39ddb; }
+
+        /* 进度条 */
+        .syb_progress_box { margin-top: 16px; }
+        .syb_progress_track {
+            height: 26px;
+            background: #eef1f4;
+            border-radius: 13px;
+            overflow: hidden;
+        }
+        .syb_progress_fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 13px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.12s linear;
+        }
+        .syb_progress_text {
+            text-align: center;
+            margin-top: 8px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 对比表 */
+        .syb_table {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #f39c12;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 8px 4px 4px;
+            overflow-x: auto;
+        }
+        .syb_table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .syb_table th, .syb_table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f1f2f6; }
+        .syb_table th { background: #fdf6e3; color: #7d6608; }
+        .syb_table td:first-child { font-family: Consolas, "Courier New", monospace; font-weight: bold; color: #2c3e50; }
+        .syb_table tr:last-child td { border-bottom: none; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 24px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+        @media (max-width: 800px) {
+            .syb_cards { grid-template-columns: 1fr; }
+            .syb_count_num { font-size: 56px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 两种定时器</h1>
+        <p>setTimeout（一次性定时器：到点只响一次）与 setInterval（周期性定时器：每隔一段时间响一次）</p>
+    </div>
+
+    <!-- ==================== A. setTimeout ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">A</span>setTimeout：一次性定时器（到点执行一次）</div>
+    <div class="syb_cards">
+        <div class="syb_card syb_card_orange">
+            <div class="syb_card_title"><span class="syb_badge">1</span><strong>5 秒倒计时（可提前取消）</strong></div>
+            <div class="syb_codeblock">var syb_timerId = setTimeout(function () {
+    // 5 秒后只执行这一次
+}, 1000);
+clearTimeout(syb_timerId);   // 取消还未执行的定时器</div>
+            <div class="syb_count_num" id="syb_count_num">- -</div>
+            <div class="syb_btns">
+                <button class="syb_btn syb_btn_orange" id="syb_count_start" onclick="syb_startCount()">开始 5 秒倒计时</button>
+                <button class="syb_btn syb_btn_gray" id="syb_count_cancel" onclick="syb_cancelCount()" disabled>取消（clearTimeout）</button>
+            </div>
+            <div class="syb_desc">用"递归 setTimeout"实现倒计时：每秒设一个新的一次性定时器，好处是随时可以 clearTimeout 精准取消下一步。</div>
+        </div>
+        <div class="syb_card syb_card_orange">
+            <div class="syb_card_title"><span class="syb_badge">2</span><strong>setTimeout(fn, 0) 也不是"立即执行"</strong></div>
+            <div class="syb_codeblock">console.log("1. 同步代码");
+setTimeout(function () {
+    console.log("3. 定时器回调");
+}, 0);
+console.log("2. 同步代码结束");   // 先输出</div>
+            <div class="syb_log" id="syb_loop_log"><span style="color:#6b7f92;">// 点击按钮，看真实执行顺序</span></div>
+            <div class="syb_btns">
+                <button class="syb_btn syb_btn_orange" onclick="syb_runLoopDemo()">运行顺序演示</button>
+            </div>
+            <div class="syb_desc">定时器回调要等"同步代码全部执行完"才会被调用（事件循环机制），哪怕延时写 0 毫秒也一样。</div>
+        </div>
+    </div>
+
+    <!-- ==================== B. setInterval ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">B</span>setInterval：周期性定时器（每隔一段时间执行一次）</div>
+    <div class="syb_cards">
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">3</span><strong>数字时钟（每 100ms 刷新）</strong></div>
+            <div class="syb_codeblock">var syb_clockId = setInterval(function () {
+    // 每隔 100ms 执行一次，直到 clearInterval
+}, 100);
+clearInterval(syb_clockId);   // 停止</div>
+            <div class="syb_clock" id="syb_clock">--:--:--<small>.---</small></div>
+            <div class="syb_btns">
+                <button class="syb_btn" id="syb_clock_btn" onclick="syb_toggleClock()">启动时钟</button>
+            </div>
+            <div class="syb_desc">同一个定时器 id 句柄，启动时保存、停止时 clearInterval，避免重复创建导致"越走越快"。</div>
+        </div>
+        <div class="syb_card syb_card_purple">
+            <div class="syb_card_title"><span class="syb_badge">4</span><strong>下载进度条模拟（到 100% 自动停止）</strong></div>
+            <div class="syb_codeblock">syb_timer = setInterval(function () {
+    syb_progress += 1;
+    if (syb_progress &gt;= 100) {
+        clearInterval(syb_timer);   // 任务完成，必须手动停止
+    }
+}, 80);</div>
+            <div class="syb_progress_box">
+                <div class="syb_progress_track"><div class="syb_progress_fill" id="syb_progress_fill"></div></div>
+                <div class="syb_progress_text" id="syb_progress_text">0%（点击"开始下载"演示周期性执行）</div>
+            </div>
+            <div class="syb_btns">
+                <button class="syb_btn" id="syb_dl_btn" onclick="syb_toggleDownload()">开始下载</button>
+                <button class="syb_btn syb_btn_gray" onclick="syb_resetDownload()">重置</button>
+            </div>
+            <div class="syb_desc">setInterval 会一直执行到 clearInterval 为止；条件满足后记得手动清除，否则定时器会"空转"浪费性能。</div>
+        </div>
+    </div>
+
+    <!-- ==================== C. 对比总结 ==================== -->
+    <div class="syb_section_title"><span class="syb_badge">C</span>两种定时器对比</div>
+    <div class="syb_table">
+        <table>
+            <thead>
+                <tr><th>对比项</th><th>setTimeout</th><th>setInterval</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>执行次数</td><td>到点后只执行 1 次</td><td>每隔指定毫秒执行 1 次，循环往复</td></tr>
+                <tr><td>返回值</td><td>定时器编号（数字），用于清除</td><td>定时器编号（数字），用于清除</td></tr>
+                <tr><td>清除方法</td><td>clearTimeout(id)</td><td>clearInterval(id)</td></tr>
+                <tr><td>典型场景</td><td>延迟提示、防抖、广告弹窗</td><td>时钟、轮播图、进度条、轮询刷新</td></tr>
+                <tr><td>等价写法</td><td colspan="2">递归 setTimeout 可模拟 setInterval，且上一次执行完才计时，更不容易"堆积"</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="syb_note">
+        三个注意事项：<strong>① 定时器的"延时"不精确</strong>——回调要排队等同步代码执行完，实际触发时间只会晚不会早；
+        <strong>② 用变量保存定时器 id</strong>——需要停止时才能 clearTimeout / clearInterval，同一个按钮反复启动前先清旧的，避免多个定时器叠加；
+        <strong>③ 时间单位是毫秒</strong>——setTimeout(fn, 3000) 是 3 秒，不是 3 秒的 3000 分之一。
+    </div>
+
+    <script>
+        /* ============ 演示 1：5 秒倒计时（递归 setTimeout） ============ */
+        var syb_countTimer = null;   // 保存定时器 id
+
+        function syb_startCount() {
+            // 若上一次还没结束，先清除，避免叠加
+            if (syb_countTimer !== null) { clearTimeout(syb_countTimer); }
+
+            var syb_left = 5;
+            var syb_num = document.getElementById("syb_count_num");
+            syb_num.className = "syb_count_num";
+            document.getElementById("syb_count_start").disabled = true;
+            document.getElementById("syb_count_cancel").disabled = false;
+
+            function syb_tick() {
+                syb_num.innerHTML = syb_left;
+                if (syb_left <= 0) {
+                    syb_num.innerHTML = "时间到！🎉";
+                    syb_num.className = "syb_count_num syb_done";
+                    syb_resetCountBtns();
+                    return;
+                }
+                syb_left--;
+                // 递归 setTimeout：1 秒后再安排下一次
+                syb_countTimer = setTimeout(syb_tick, 1000);
+            }
+            syb_tick();
+        }
+
+        function syb_cancelCount() {
+            if (syb_countTimer !== null) {
+                clearTimeout(syb_countTimer);   // 取消还未执行的那次
+                syb_countTimer = null;
+            }
+            var syb_num = document.getElementById("syb_count_num");
+            syb_num.innerHTML = "已取消（clearTimeout）";
+            syb_num.className = "syb_count_num syb_cancel";
+            syb_resetCountBtns();
+        }
+
+        function syb_resetCountBtns() {
+            syb_countTimer = null;
+            document.getElementById("syb_count_start").disabled = false;
+            document.getElementById("syb_count_cancel").disabled = true;
+        }
+
+        /* ============ 演示 2：事件循环执行顺序 ============ */
+        function syb_addLog(syb_text, syb_cls) {
+            var syb_box = document.getElementById("syb_loop_log");
+            var syb_now = new Date();
+            var syb_stamp = syb_now.getMinutes() + "分" + syb_now.getSeconds() + "秒" +
+                ("00" + syb_now.getMilliseconds()).slice(-3) + "ms";
+            var syb_line = document.createElement("div");
+            syb_line.className = "syb_log_line " + syb_cls;
+            syb_line.innerHTML = '<span class="syb_l_time">[' + syb_stamp + ']</span> ' + syb_text;
+            syb_box.appendChild(syb_line);
+        }
+
+        function syb_runLoopDemo() {
+            var syb_box = document.getElementById("syb_loop_log");
+            syb_box.innerHTML = "";
+            // 1. 先执行同步代码
+            syb_addLog("1. 同步代码开始执行", "syb_l_sync");
+            // 2. 设置一个 0 毫秒的一次性定时器
+            setTimeout(function () {
+                syb_addLog("3. setTimeout(fn, 0) 的回调才执行 ← 虽然写的是 0ms", "syb_l_timer");
+            }, 0);
+            // 3. 同步代码继续
+            syb_addLog("2. 同步代码执行完毕（定时器在排队等待）", "syb_l_sync");
+        }
+
+        /* ============ 演示 3：setInterval 数字时钟 ============ */
+        var syb_clockTimer = null;   // 时钟定时器 id
+        var syb_clockRunning = false;
+
+        function syb_toggleClock() {
+            var syb_btn = document.getElementById("syb_clock_btn");
+            if (syb_clockRunning) {
+                clearInterval(syb_clockTimer);      // 停止
+                syb_clockRunning = false;
+                syb_btn.innerHTML = "启动时钟";
+                return;
+            }
+            function syb_draw() {
+                var syb_n = new Date();
+                var syb_pad = function (syb_v) { return ("0" + syb_v).slice(-2); };
+                document.getElementById("syb_clock").innerHTML =
+                    syb_pad(syb_n.getHours()) + ":" + syb_pad(syb_n.getMinutes()) + ":" + syb_pad(syb_n.getSeconds()) +
+                    '<small>.' + ("00" + syb_n.getMilliseconds()).slice(-3) + "</small>";
+            }
+            syb_draw();
+            syb_clockTimer = setInterval(syb_draw, 100);   // 每 100ms 刷新一次
+            syb_clockRunning = true;
+            syb_btn.innerHTML = "停止时钟（clearInterval）";
+        }
+
+        /* ============ 演示 4：进度条模拟下载 ============ */
+        var syb_dlTimer = null;
+        var syb_progress = 0;
+        var syb_dlRunning = false;
+
+        function syb_toggleDownload() {
+            var syb_btn = document.getElementById("syb_dl_btn");
+            if (syb_dlRunning) {
+                clearInterval(syb_dlTimer);   // 暂停
+                syb_dlRunning = false;
+                syb_btn.innerHTML = "继续下载";
+                document.getElementById("syb_progress_text").innerHTML =
+                    syb_progress + "%（已暂停，点“继续下载”接着传）";
+                return;
+            }
+            syb_dlTimer = setInterval(function () {
+                syb_progress += Math.floor(Math.random() * 4) + 1;   // 每次随机 +1~4
+                if (syb_progress >= 100) {
+                    syb_progress = 100;
+                    clearInterval(syb_dlTimer);   // 完成，停止定时器
+                    syb_dlRunning = false;
+                    syb_btn.innerHTML = "开始下载";
+                    document.getElementById("syb_progress_text").innerHTML = "100% 下载完成！定时器已自动清除";
+                } else {
+                    document.getElementById("syb_progress_text").innerHTML = syb_progress + "%";
+                }
+                document.getElementById("syb_progress_fill").style.width = syb_progress + "%";
+            }, 80);
+            syb_dlRunning = true;
+            syb_btn.innerHTML = "暂停";
+        }
+
+        function syb_resetDownload() {
+            if (syb_dlTimer !== null) { clearInterval(syb_dlTimer); }
+            syb_dlRunning = false;
+            syb_progress = 0;
+            document.getElementById("syb_progress_fill").style.width = "0%";
+            document.getElementById("syb_progress_text").innerHTML = '0%（点击"开始下载"演示周期性执行）';
+            document.getElementById("syb_dl_btn").innerHTML = "开始下载";
+        }
+    </script>
+</body>
+</html>

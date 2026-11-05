@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.05
+使用的大模型：CodeBuddy Auto
+功能名称：基于 Mermaid 的智能客服系统图（问答流程图 + 知识库 ER 图，mermaid 库在本地 cdn 目录）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— Mermaid 智能客服系统图（流程图 / ER 图）</title>
+    <!-- Mermaid 库：已从 CDN 下载到本地 cdn 目录（cdn/mermaid/mermaid.min.js） -->
+    <script src="cdn/mermaid/mermaid.min.js"></script>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），mermaid 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 24px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_card {
+            max-width: 1020px;
+            margin: 0 auto 24px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 22px;
+            overflow-x: auto;
+        }
+        .syb_card_title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .syb_badge {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #8e44ad;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_card_title strong { font-size: 16px; color: #2c3e50; }
+        .syb_card_title .syb_chip {
+            font-size: 12px;
+            background: #eef1f4;
+            color: #7f8c8d;
+            border-radius: 12px;
+            padding: 3px 12px;
+            font-family: Consolas, "Courier New", monospace;
+        }
+        .syb_desc { font-size: 13px; color: #777; margin-bottom: 12px; line-height: 1.7; }
+
+        /* mermaid 渲染区域：文字模式时先隐藏，渲染完成后显示 */
+        pre.mermaid {
+            visibility: hidden;
+            display: flex;
+            justify-content: center;
+            background: #fafbfc;
+            border: 1px dashed #e4e9ee;
+            border-radius: 10px;
+            padding: 16px 10px;
+        }
+        pre.mermaid svg { max-width: 100% !important; height: auto; }
+
+        .syb_error {
+            display: none;
+            max-width: 1020px;
+            margin: 0 auto 20px;
+            background: #fdecea;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .syb_error.syb_show { display: block; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 基于 Mermaid 的智能客服系统图</h1>
+        <p>用"文本即图"的方式绘制：左图是问答引擎的完整流转，下图是知识库存储层的实体关系设计（mermaid.min.js 已本地化）</p>
+    </div>
+
+    <div class="syb_error" id="syb_error"></div>
+
+    <!-- ==================== 图一：智能问答流程图 ==================== -->
+    <div class="syb_card">
+        <div class="syb_card_title">
+            <span class="syb_badge">1</span><strong>智能客服问答流程图</strong>
+            <span class="syb_chip">mermaid flowchart TD</span>
+        </div>
+        <div class="syb_desc">
+            一次完整问答的决策链路：提问 → 预处理 → 意图识别分流（咨询类走机器人，交易/投诉类直接转人工）→
+            向量化检索 → 按置信度决定"直接回答"还是"推荐相似问题"，最后所有反馈都流入知识扩充闭环。
+        </div>
+        <pre class="mermaid">
+flowchart TD
+    A["用户提问"] --> B["文本预处理：分词 / 纠错"]
+    B --> C{"意图识别"}
+    C -- "咨询类" --> D["问句向量化 Sentence-BERT"]
+    C -- "交易 / 投诉类" --> H["转人工客服"]
+    D --> E["知识库检索：倒排索引 + 向量 ANN"]
+    E --> F{"Top-1 置信度是否达到阈值"}
+    F -- "达到" --> G["返回标准答案"]
+    F -- "未达到" --> I["推荐相似问题列表 或 转人工"]
+    G --> J["收集用户反馈：有用 / 没用"]
+    I --> J
+    J --> K[("未命中问题入库：知识扩充闭环")]
+        </pre>
+    </div>
+
+    <!-- ==================== 图二：知识库 ER 图 ==================== -->
+    <div class="syb_card">
+        <div class="syb_card_title">
+            <span class="syb_badge">2</span><strong>知识库系统 ER 图</strong>
+            <span class="syb_chip">mermaid erDiagram</span>
+        </div>
+        <div class="syb_desc">
+            存储层实体关系设计：用户（USER）发起会话（SESSION），会话包含多条消息（MESSAGE）；知识侧由分类（CATEGORY）
+            组织问答对（FAQ），每个 FAQ 通过相似问（SIMILAR_QUESTION）扩充问法；每条机器人消息可获得反馈（FEEDBACK），
+            会话可转接人工客服（OPERATOR）。
+        </div>
+        <pre class="mermaid">
+erDiagram
+    USER {
+        bigint user_id PK "用户ID"
+        varchar nickname "昵称"
+        varchar phone "手机号"
+        datetime created_at "注册时间"
+    }
+    SESSION {
+        bigint session_id PK "会话ID"
+        bigint user_id FK "所属用户"
+        varchar channel "接入渠道"
+        datetime start_time "开始时间"
+    }
+    MESSAGE {
+        bigint message_id PK "消息ID"
+        bigint session_id FK "所属会话"
+        varchar content "消息内容"
+        tinyint sender_type "1用户 2机器人 3人工"
+        datetime send_time "发送时间"
+    }
+    CATEGORY {
+        int category_id PK "分类ID"
+        varchar category_name "分类名称"
+        int parent_id "父分类ID"
+    }
+    FAQ {
+        int faq_id PK "问答对ID"
+        int category_id FK "所属分类"
+        varchar std_question "标准问"
+        text std_answer "标准答"
+        int hit_count "累计命中次数"
+    }
+    SIMILAR_QUESTION {
+        int sq_id PK "相似问ID"
+        int faq_id FK "所属FAQ"
+        varchar question "相似问文本"
+    }
+    FEEDBACK {
+        bigint feedback_id PK "反馈ID"
+        bigint message_id FK "被评价消息"
+        int faq_id FK "命中的FAQ"
+        tinyint is_useful "是否有用"
+    }
+    OPERATOR {
+        int operator_id PK "人工客服ID"
+        varchar operator_name "客服姓名"
+        varchar group_name "所属班组"
+    }
+
+    USER ||--o{ SESSION : "发起"
+    SESSION ||--o{ MESSAGE : "包含"
+    CATEGORY ||--o{ FAQ : "归类"
+    CATEGORY ||--o{ CATEGORY : "父子层级"
+    FAQ ||--o{ SIMILAR_QUESTION : "扩充问法"
+    MESSAGE ||--o| FEEDBACK : "获得评价"
+    FAQ ||--o{ FEEDBACK : "被命中评价"
+    SESSION }o--o| OPERATOR : "转接人工"
+        </pre>
+    </div>
+
+    <div class="syb_note">
+        要点：<strong>mermaid.min.js 已下载到 cdn 目录本地引用</strong>，用"文本即图"的方式维护图表（改文字就改图）；
+        流程图用 <strong>flowchart TD + 菱形判断节点</strong> 表达置信度分流；ER 图用 <strong>erDiagram + 一对多/可选关系（||--o{ 等乌鸦脚符号）</strong>
+        描述表结构，PK/FK 标注主外键，属性支持中文备注——这也是科研系统设计文档的常用画法。
+    </div>
+
+    <script>
+        // Mermaid 初始化：本地库加载失败时给出友好提示
+        if (typeof mermaid === "undefined") {
+            document.getElementById("syb_error").className = "syb_error syb_show";
+            document.getElementById("syb_error").innerHTML =
+                "<strong>Mermaid 库加载失败。</strong><br>请确认 cdn/mermaid/mermaid.min.js 存在，" +
+                "并通过本地服务器（如 http://localhost:8899/18-6.html）打开本页。";
+        } else {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: "forest",
+                flowchart: { curve: "basis", useMaxWidth: true },
+                er: { useMaxWidth: true },
+                securityLevel: "loose"
+            });
+            // 渲染完成后显示（避免闪烁原始文本）
+            mermaid.run({ querySelector: "pre.mermaid" }).then(function () {
+                var syb_list = document.querySelectorAll("pre.mermaid");
+                for (var syb_i = 0; syb_i < syb_list.length; syb_i++) {
+                    syb_list[syb_i].style.visibility = "visible";
+                }
+            }).catch(function (syb_e) {
+                document.getElementById("syb_error").className = "syb_error syb_show";
+                document.getElementById("syb_error").innerHTML =
+                    "<strong>图表渲染失败：</strong>" + syb_e.message;
+                var syb_list = document.querySelectorAll("pre.mermaid");
+                for (var syb_j = 0; syb_j < syb_list.length; syb_j++) {
+                    syb_list[syb_j].style.visibility = "visible";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

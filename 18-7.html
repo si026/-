@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.05
+使用的大模型：CodeBuddy Auto
+功能名称：three.js 3D 可视化（3D 柱状图 + 3D 聚类散点图，three 库在本地 cdn 目录）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— three.js 3D 可视化（柱状图 / 散点图）</title>
+    <!-- three.js 库：已从 CDN 下载到本地 cdn 目录（cdn/three/three.min.js，r128 UMD 全局版） -->
+    <script src="cdn/three/three.min.js"></script>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），three 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 24px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_card {
+            max-width: 1020px;
+            margin: 0 auto 24px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        .syb_card_head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .syb_badge {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #3498db;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .syb_card_head strong { font-size: 16px; color: #2c3e50; }
+        .syb_card_head .syb_chip {
+            font-size: 12px;
+            background: #eef1f4;
+            color: #7f8c8d;
+            border-radius: 12px;
+            padding: 3px 12px;
+            font-family: Consolas, "Courier New", monospace;
+        }
+        .syb_btn {
+            border: none;
+            border-radius: 16px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; }
+        .syb_desc { font-size: 13px; color: #777; margin: 4px 0 12px; line-height: 1.7; }
+
+        .syb_viewport { position: relative; }
+        canvas.syb_gl {
+            display: block;
+            width: 100%;
+            height: 430px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #f8fafc 0%, #eaf0f6 100%);
+            cursor: grab;
+            touch-action: none;
+        }
+        canvas.syb_gl:active { cursor: grabbing; }
+
+        /* 3D 悬停提示框 */
+        .syb_tip3d {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            background: rgba(44, 62, 80, 0.92);
+            color: #fff;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: nowrap;
+            z-index: 5;
+        }
+        .syb_tip3d b { color: #f1c40f; }
+
+        /* 图例 */
+        .syb_legend {
+            display: flex;
+            gap: 18px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #555;
+            flex-wrap: wrap;
+        }
+        .syb_legend i {
+            display: inline-block;
+            width: 12px; height: 12px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: -1px;
+        }
+
+        .syb_error {
+            display: none;
+            max-width: 1020px;
+            margin: 0 auto 20px;
+            background: #fdecea;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .syb_error.syb_show { display: block; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— three.js 3D 可视化</h1>
+        <p>图一：商品销量 3D 柱状图（悬停高亮） · 图二：客户聚类 3D 散点图（500 个点） —— 拖拽旋转 / 滚轮缩放（three.min.js 已本地化）</p>
+    </div>
+
+    <div class="syb_error" id="syb_error"></div>
+
+    <!-- ==================== 图一：3D 柱状图 ==================== -->
+    <div class="syb_card">
+        <div class="syb_card_head">
+            <span class="syb_badge">1</span><strong>商品销量 3D 柱状图</strong>
+            <span class="syb_chip">BoxGeometry 立方柱 · Raycaster 悬停高亮</span>
+            <button class="syb_btn" id="syb_rotate_btn" onclick="syb_toggleRotate()">暂停自动旋转</button>
+        </div>
+        <div class="syb_desc">
+            用 three.js 的立方体（BoxGeometry）按销量值缩放高度组成 3D 柱状图，颜色按数值深浅映射；
+            鼠标悬停时通过 Raycaster 射线拾取高亮该柱并显示数值，拖拽可旋转视角、滚轮缩放。
+        </div>
+        <div class="syb_viewport" id="syb_view_bar">
+            <canvas class="syb_gl" id="syb_canvas_bar" width="940" height="430"></canvas>
+            <div class="syb_tip3d" id="syb_tip_bar"></div>
+        </div>
+    </div>
+
+    <!-- ==================== 图二：3D 散点图 ==================== -->
+    <div class="syb_card">
+        <div class="syb_card_head">
+            <span class="syb_badge">2</span><strong>客户消费聚类 3D 散点图</strong>
+            <span class="syb_chip">THREE.Points · 500 个数据点 · 3 个簇</span>
+        </div>
+        <div class="syb_desc">
+            模拟客户分群结果：500 个样本点按三个高斯簇分布（消费金额 / 购买频率 / 最近消费间隔），
+            使用 THREE.Points 点云渲染——K-Means 等聚类算法的可视化常用此形式。
+        </div>
+        <div class="syb_viewport" id="syb_view_scatter">
+            <canvas class="syb_gl" id="syb_canvas_scatter" width="940" height="430"></canvas>
+        </div>
+        <div class="syb_legend">
+            <span><i style="background:#e74c3c;"></i>高价值客户（簇 A）</span>
+            <span><i style="background:#27ae60;"></i>成长型客户（簇 B）</span>
+            <span><i style="background:#3498db;"></i>流失预警客户（簇 C）</span>
+        </div>
+    </div>
+
+    <div class="syb_note">
+        要点：<strong>three.min.js 已下载到 cdn 目录本地引用</strong>（r128 全局 THREE 对象，无需模块化打包）；
+        柱状图核心是 <strong>BoxGeometry 按数值缩放 + Raycaster 射线拾取交互</strong>；
+        散点图核心是 <strong>BufferGeometry + THREE.Points 点云</strong>；两个场景都实现了<strong>球坐标拖拽旋转与滚轮缩放</strong>（自实现，未依赖 OrbitControls）。
+    </div>
+
+    <script>
+        /* ============ 库加载检查 ============ */
+        if (typeof THREE === "undefined") {
+            document.getElementById("syb_error").className = "syb_error syb_show";
+            document.getElementById("syb_error").innerHTML =
+                "<strong>three.js 库加载失败。</strong><br>请确认 cdn/three/three.min.js 存在，" +
+                "并通过本地服务器（如 http://localhost:8899/18-7.html）打开本页。";
+        }
+
+        /* ============================================================
+           公共工具 1：文字 Sprite（把文字画到 canvas 上当作 3D 标签）
+        ============================================================ */
+        function syb_makeLabel(syb_text, syb_color, syb_fontSize) {
+            var syb_canvas = document.createElement("canvas");
+            var syb_ctx = syb_canvas.getContext("2d");
+            syb_ctx.font = "bold " + (syb_fontSize || 40) + "px 'Microsoft YaHei'";
+            syb_ctx.fillStyle = syb_color || "#2c3e50";
+            var syb_tw = syb_ctx.measureText(syb_text).width;
+            syb_canvas.width = syb_tw + 16;
+            syb_canvas.height = (syb_fontSize || 40) + 20;
+            var syb_ctx2 = syb_canvas.getContext("2d");
+            syb_ctx2.font = "bold " + (syb_fontSize || 40) + "px 'Microsoft YaHei'";
+            syb_ctx2.fillStyle = syb_color || "#2c3e50";
+            syb_ctx2.fillText(syb_text, 8, (syb_fontSize || 40) + 6);
+
+            var syb_texture = new THREE.CanvasTexture(syb_canvas);
+            var syb_material = new THREE.SpriteMaterial({ map: syb_texture, transparent: true });
+            var syb_sprite = new THREE.Sprite(syb_material);
+            syb_sprite.scale.set(syb_canvas.width / 60, syb_canvas.height / 60, 1);
+            return syb_sprite;
+        }
+
+        /* ============================================================
+           公共工具 2：自实现球坐标轨道控制（拖拽旋转 / 滚轮缩放）
+        ============================================================ */
+        function syb_makeOrbit(syb_camera, syb_dom) {
+            var syb_state = {
+                theta: Math.PI / 5,       // 水平角
+                phi: Math.PI / 3.4,       // 俯仰角
+                radius: 26,               // 距离
+                dragging: false,
+                lastX: 0,
+                lastY: 0
+            };
+            syb_dom.addEventListener("mousedown", function (syb_e) {
+                syb_state.dragging = true;
+                syb_state.lastX = syb_e.clientX;
+                syb_state.lastY = syb_e.clientY;
+            });
+            window.addEventListener("mouseup", function () { syb_state.dragging = false; });
+            window.addEventListener("mousemove", function (syb_e) {
+                if (!syb_state.dragging) { return; }
+                syb_state.theta -= (syb_e.clientX - syb_state.lastX) * 0.008;
+                syb_state.phi -= (syb_e.clientY - syb_state.lastY) * 0.008;
+                if (syb_state.phi < 0.15) { syb_state.phi = 0.15; }
+                if (syb_state.phi > Math.PI / 2.05) { syb_state.phi = Math.PI / 2.05; }
+                syb_state.lastX = syb_e.clientX;
+                syb_state.lastY = syb_e.clientY;
+            });
+            syb_dom.addEventListener("wheel", function (syb_e) {
+                syb_e.preventDefault();
+                syb_state.radius += syb_e.deltaY * 0.02;
+                if (syb_state.radius < 8) { syb_state.radius = 8; }
+                if (syb_state.radius > 60) { syb_state.radius = 60; }
+            }, { passive: false });
+
+            // 每帧根据球坐标更新相机位置
+            return {
+                update: function () {
+                    syb_camera.position.set(
+                        syb_state.radius * Math.sin(syb_state.phi) * Math.sin(syb_state.theta),
+                        syb_state.radius * Math.cos(syb_state.phi),
+                        syb_state.radius * Math.sin(syb_state.phi) * Math.cos(syb_state.theta)
+                    );
+                    syb_camera.lookAt(0, 2, 0);
+                }
+            };
+        }
+
+        /* ============================================================
+           图一：3D 柱状图（商品销量）
+        ============================================================ */
+        var syb_barScene = new THREE.Scene();
+        var syb_barCamera = new THREE.PerspectiveCamera(45, 940 / 430, 0.1, 200);
+        var syb_barRenderer = new THREE.WebGLRenderer({ canvas: document.getElementById("syb_canvas_bar"), antialias: true });
+        syb_barRenderer.setSize(940, 430);
+
+        // 灯光
+        syb_barScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        var syb_barLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        syb_barLight.position.set(10, 18, 10);
+        syb_barScene.add(syb_barLight);
+
+        // 地面网格
+        var syb_barGrid = new THREE.GridHelper(16, 8, 0xb8c4cc, 0xdfe6ec);
+        syb_barGrid.position.y = 0;
+        syb_barScene.add(syb_barGrid);
+
+        // 柱状图数据：6 款商品销量（万台）
+        var syb_barData = [
+            { name: "iPhone",   value: 245 },
+            { name: "华为",     value: 310 },
+            { name: "小米",     value: 180 },
+            { name: "OPPO",     value: 420 },
+            { name: "vivo",     value: 265 },
+            { name: "三星",     value: 350 }
+        ];
+        var syb_barMax = 500;   // 值域上限（决定高度比例）
+        var syb_bars = [];      // 保存柱体 Mesh 供 Raycaster 拾取
+
+        for (var syb_i = 0; syb_i < syb_barData.length; syb_i++) {
+            var syb_d = syb_barData[syb_i];
+            var syb_h = syb_d.value / syb_barMax * 8 + 0.3;
+            // 颜色按数值深浅映射：越卖得好越红
+            var syb_t = syb_d.value / syb_barMax;
+            var syb_r = Math.round(0x34 + syb_t * (0xe7 - 0x34));
+            var syb_g = Math.round(0x9b - syb_t * (0x9b - 0x3c));
+            var syb_b = Math.round(0xdc - syb_t * (0xdc - 0x3c));
+
+            var syb_geo = new THREE.BoxGeometry(1.6, syb_h, 1.6);
+            var syb_mat = new THREE.MeshLambertMaterial({ color: (syb_r << 16) | (syb_g << 8) | syb_b });
+            var syb_bar = new THREE.Mesh(syb_geo, syb_mat);
+            syb_bar.position.set(-7.5 + syb_i * 3, syb_h / 2, 0);
+            syb_bar.userData = { name: syb_d.name, value: syb_d.value, baseColor: syb_mat.color.clone() };
+            syb_barScene.add(syb_bar);
+            syb_bars.push(syb_bar);
+
+            // 柱顶数值标签 + 底部名称标签
+            var syb_valueLabel = syb_makeLabel(String(syb_d.value), "#e67e22", 44);
+            syb_valueLabel.position.set(syb_bar.position.x, syb_h + 0.8, 0);
+            syb_barScene.add(syb_valueLabel);
+
+            var syb_nameLabel = syb_makeLabel(syb_d.name, "#2c3e50", 40);
+            syb_nameLabel.position.set(syb_bar.position.x, -0.6, 2.2);
+            syb_barScene.add(syb_nameLabel);
+        }
+
+        var syb_barOrbit = syb_makeOrbit(syb_barCamera, document.getElementById("syb_view_bar"));
+        var syb_barAutoRotate = true;
+
+        function syb_toggleRotate() {
+            syb_barAutoRotate = !syb_barAutoRotate;
+            document.getElementById("syb_rotate_btn").innerHTML =
+                syb_barAutoRotate ? "暂停自动旋转" : "开启自动旋转";
+        }
+
+        // Raycaster：鼠标悬停拾取柱体
+        var syb_raycaster = new THREE.Raycaster();
+        var syb_mouse = new THREE.Vector2(-10, -10);
+        var syb_tipBar = document.getElementById("syb_tip_bar");
+        var syb_hovered = null;
+
+        document.getElementById("syb_canvas_bar").addEventListener("mousemove", function (syb_e) {
+            var syb_rect = this.getBoundingClientRect();
+            syb_mouse.x = ((syb_e.clientX - syb_rect.left) / syb_rect.width) * 2 - 1;
+            syb_mouse.y = -((syb_e.clientY - syb_rect.top) / syb_rect.height) * 2 + 1;
+            syb_tipBar.style.left = (syb_e.clientX - syb_rect.left + 14) + "px";
+            syb_tipBar.style.top = (syb_e.clientY - syb_rect.top + 10) + "px";
+        });
+        document.getElementById("syb_canvas_bar").addEventListener("mouseleave", function () {
+            syb_mouse.set(-10, -10);
+            syb_tipBar.style.display = "none";
+        });
+
+        function syb_renderBar() {
+            if (syb_barAutoRotate) {
+                // 自动旋转：缓慢移动相机水平角
+                syb_barOrbit.theta += 0.004;
+            }
+            syb_barOrbit.update();
+
+            // 拾取
+            syb_raycaster.setFromCamera(syb_mouse, syb_barCamera);
+            var syb_hits = syb_raycaster.intersectObjects(syb_bars);
+            var syb_newHovered = syb_hits.length > 0 ? syb_hits[0].object : null;
+            if (syb_newHovered !== syb_hovered) {
+                // 恢复旧柱颜色
+                if (syb_hovered) { syb_hovered.material.color.copy(syb_hovered.userData.baseColor); }
+                syb_hovered = syb_newHovered;
+                if (syb_hovered) {
+                    syb_hovered.material.color.set(0xf1c40f);   // 高亮金色
+                    syb_tipBar.innerHTML = "<b>" + syb_hovered.userData.name + "</b><br>销量：" +
+                        syb_hovered.userData.value + " 万台";
+                    syb_tipBar.style.display = "block";
+                } else {
+                    syb_tipBar.style.display = "none";
+                }
+            }
+
+            syb_barRenderer.render(syb_barScene, syb_barCamera);
+        }
+
+        /* ============================================================
+           图二：3D 散点图（客户聚类点云）
+        ============================================================ */
+        var syb_scScene = new THREE.Scene();
+        var syb_scCamera = new THREE.PerspectiveCamera(45, 940 / 430, 0.1, 200);
+        var syb_scRenderer = new THREE.WebGLRenderer({ canvas: document.getElementById("syb_canvas_scatter"), antialias: true });
+        syb_scRenderer.setSize(940, 430);
+
+        syb_scScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        syb_scScene.add(new THREE.AxesHelper(8));   // 三轴参考线
+
+        // 生成三个高斯簇（Box-Muller 变换）
+        function syb_randGauss(syb_sigma) {
+            var syb_u = Math.random() || 1e-9;
+            var syb_v = Math.random();
+            return Math.sqrt(-2 * Math.log(syb_u)) * Math.cos(2 * Math.PI * syb_v) * syb_sigma;
+        }
+        var syb_clusters = [
+            { center: [-4, 2.5, -2], sigma: 1.0, color: 0xe74c3c, count: 180 },   // 高价值
+            { center: [0, -1.5, 2.5], sigma: 1.2, color: 0x27ae60, count: 200 },  // 成长型
+            { center: [4.5, 0.5, -1], sigma: 0.9, color: 0x3498db, count: 120 }   // 流失预警
+        ];
+        var syb_positions = [];
+        var syb_colors = [];
+        for (var syb_c = 0; syb_c < syb_clusters.length; syb_c++) {
+            var syb_cl = syb_clusters[syb_c];
+            var syb_color = new THREE.Color(syb_cl.color);
+            for (var syb_k = 0; syb_k < syb_cl.count; syb_k++) {
+                syb_positions.push(
+                    syb_cl.center[0] + syb_randGauss(syb_cl.sigma),
+                    syb_cl.center[1] + syb_randGauss(syb_cl.sigma),
+                    syb_cl.center[2] + syb_randGauss(syb_cl.sigma)
+                );
+                // 同簇内颜色带轻微明暗变化，更有层次
+                syb_colors.push(
+                    syb_color.r * (0.8 + Math.random() * 0.4),
+                    syb_color.g * (0.8 + Math.random() * 0.4),
+                    syb_color.b * (0.8 + Math.random() * 0.4)
+                );
+            }
+        }
+        var syb_scGeo = new THREE.BufferGeometry();
+        syb_scGeo.setAttribute("position", new THREE.Float32BufferAttribute(syb_positions, 3));
+        syb_scGeo.setAttribute("color", new THREE.Float32BufferAttribute(syb_colors, 3));
+        var syb_points = new THREE.Points(syb_scGeo, new THREE.PointsMaterial({
+            size: 0.22,
+            vertexColors: true,
+            sizeAttenuation: true,
+            transparent: true,
+            opacity: 0.9
+        }));
+        syb_scScene.add(syb_points);
+
+        // 簇中心标签
+        var syb_clLabels = [["簇 A 高价值", -4, 4.4, -2], ["簇 B 成长型", 0, -3.2, 2.5], ["簇 C 流失预警", 4.5, 2.6, -1]];
+        for (var syb_l = 0; syb_l < syb_clLabels.length; syb_l++) {
+            var syb_label = syb_makeLabel(syb_clLabels[syb_l][0], "#555555", 36);
+            syb_label.position.set(syb_clLabels[syb_l][1], syb_clLabels[syb_l][2], syb_clLabels[syb_l][3]);
+            syb_scScene.add(syb_label);
+        }
+
+        var syb_scOrbit = syb_makeOrbit(syb_scCamera, document.getElementById("syb_view_scatter"));
+        syb_scOrbit.theta = Math.PI / 6;
+        syb_scOrbit.phi = Math.PI / 2.8;
+        syb_scOrbit.radius = 22;
+
+        function syb_renderScatter() {
+            // 点云整体缓慢自转
+            syb_points.rotation.y += 0.0025;
+            syb_scOrbit.update();
+            syb_scRenderer.render(syb_scScene, syb_scCamera);
+        }
+
+        /* ============ 统一动画循环 ============ */
+        function syb_loop() {
+            syb_renderBar();
+            syb_renderScatter();
+            requestAnimationFrame(syb_loop);
+        }
+        syb_loop();
+    </script>
+</body>
+</html>

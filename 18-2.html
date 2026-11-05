@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.05
+使用的大模型：CodeBuddy Auto
+功能名称：瓜子二手车全站系统架构图（Canvas 绘制，含数据流动画与悬停说明）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 瓜子二手车全站系统架构图（Canvas）</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 22px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_stage {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #21b356;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+        }
+        canvas { display: block; width: 100%; cursor: pointer; }
+
+        .syb_toolbar {
+            max-width: 1020px;
+            margin: 16px auto 0;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .syb_btn {
+            border: none;
+            border-radius: 19px;
+            height: 36px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .syb_btn_gray { background: #95a5a6; }
+        .syb_btn_gray:hover { background: #7f8c8d; }
+
+        /* 悬停说明面板 */
+        .syb_info {
+            max-width: 1020px;
+            margin: 16px auto 0;
+            background: #fff;
+            border-radius: 10px;
+            border-left: 4px solid #21b356;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 14px 18px;
+            font-size: 14px;
+            line-height: 1.7;
+            min-height: 58px;
+        }
+        .syb_info b { color: #1d7a40; }
+        .syb_info span { color: #666; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 20px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 瓜子二手车全站系统架构图</h1>
+        <p>用 Canvas 绘制的分层架构图：绿色小球模拟请求从用户层一路"流"到数据层，悬停模块可查看说明</p>
+    </div>
+
+    <div class="syb_stage">
+        <canvas id="syb_canvas" width="980" height="620"></canvas>
+    </div>
+
+    <div class="syb_toolbar">
+        <button class="syb_btn" id="syb_play_btn" onclick="syb_togglePlay()">暂停动画</button>
+        <button class="syb_btn syb_btn_gray" onclick="syb_toggleFlow()" id="syb_flow_btn">隐藏数据流</button>
+        <span style="font-size:12px;color:#999;">悬停模块查看说明，点击可固定选中（绿色描边）</span>
+    </div>
+
+    <div class="syb_info" id="syb_info">
+        <b>瓜子二手车全站系统架构</b><br>
+        <span>从上到下分为五层：用户层 → 接入层 → 业务服务层 → 中间件层 → 数据层，请求自上而下逐层流转。</span>
+    </div>
+
+    <div class="syb_note">
+        分层说明：<strong>用户层</strong>是各种客户端入口；<strong>接入层</strong>负责加速、负载均衡与鉴权路由；
+        <strong>业务服务层</strong>是瓜子二手车的核心业务模块（卖车 / 买车 / 估价 / 交易 / 支付 / 搜索）；
+        <strong>中间件层</strong>提供缓存、消息与全文检索能力；<strong>数据层</strong>负责数据持久化。
+        分层解耦让每一层都可以独立扩容，例如大促时只对服务层加机器。
+    </div>
+
+    <script>
+        var syb_canvas = document.getElementById("syb_canvas");
+        var syb_ctx = syb_canvas.getContext("2d");
+        var syb_w = syb_canvas.width;
+        var syb_h = syb_canvas.height;
+        var syb_mouse = { x: -1, y: -1 };
+        var syb_playing = true;
+        var syb_showFlow = true;
+        var syb_selected = null;      // 点击固定的模块
+        var syb_boxes = [];           // 所有可交互模块（含坐标，用于命中检测）
+
+        /* ============ 架构数据：五层，每层若干模块 ============ */
+        var syb_layers = [
+            {
+                title: "用户层", color: "#3498db", boxes: [
+                    { label: "瓜子 App", desc: "原生移动应用，二手车买卖的主要成交入口" },
+                    { label: "微信小程序", desc: "轻量级入口，依托微信生态社交分享获客" },
+                    { label: "H5 移动站", desc: "移动端网页，承载广告投放的落地页" },
+                    { label: "PC 官网", desc: "桌面端门户，提供全量车源浏览" }
+                ]
+            },
+            {
+                title: "接入层", color: "#27ae60", boxes: [
+                    { label: "CDN 加速", desc: "静态资源（图片、脚本）就近分发，降低加载延迟" },
+                    { label: "Nginx 负载均衡", desc: "反向代理，把请求均匀分发到后端服务器集群" },
+                    { label: "API 网关", desc: "统一入口：鉴权、限流、路由、日志埋点" }
+                ]
+            },
+            {
+                title: "业务服务层", color: "#8e44ad", boxes: [
+                    { label: "用户中心", desc: "注册登录、实名认证、个人资料管理" },
+                    { label: "车辆管理", desc: "车源发布、车辆检测报告、上下架管理" },
+                    { label: "智能估价", desc: "基于真实成交大数据的二手车价格评估" },
+                    { label: "订单交易", desc: "下单、合同、过户流程状态机管理" },
+                    { label: "在线支付", desc: "意向金 / 尾款支付、退款与对账" },
+                    { label: "智能搜索", desc: "品牌车型筛选、附近车源推荐" }
+                ]
+            },
+            {
+                title: "中间件层", color: "#e67e22", boxes: [
+                    { label: "Redis 缓存", desc: "热点车源、会话信息缓存，扛住高并发读" },
+                    { label: "RabbitMQ 消息", desc: "异步削峰：短信通知、估价结果推送等" },
+                    { label: "Elasticsearch", desc: "车源全文检索与多维度聚合筛选" }
+                ]
+            },
+            {
+                title: "数据层", color: "#c0392b", boxes: [
+                    { label: "MySQL 主从", desc: "核心业务数据存储，读写分离保证可用性" },
+                    { label: "MongoDB", desc: "存储车辆检测报告等文档型数据" },
+                    { label: "OSS 对象存储", desc: "车辆照片、检测视频等大文件存储" },
+                    { label: "数据仓库", desc: "交易数据离线分析，反哺智能估价模型" }
+                ]
+            }
+        ];
+
+        /* ============ 布局计算：给每层、每个模块分配坐标 ============ */
+        var syb_top = 16;
+        var syb_gapY = 34;                 // 层与层之间的间距（箭头区）
+        var syb_leftPad = 84;              // 左侧留给层名
+        var syb_rightPad = 16;
+        var syb_layerH = 88;
+
+        function syb_layout() {
+            syb_boxes = [];
+            for (var syb_i = 0; syb_i < syb_layers.length; syb_i++) {
+                var syb_layer = syb_layers[syb_i];
+                syb_layer.y = syb_top + syb_i * (syb_layerH + syb_gapY);
+                syb_layer.x = syb_leftPad;
+                syb_layer.w = syb_w - syb_leftPad - syb_rightPad;
+                syb_layer.h = syb_layerH;
+
+                var syb_n = syb_layer.boxes.length;
+                var syb_g = 12;
+                var syb_bw = (syb_layer.w - (syb_n - 1) * syb_g - 20) / syb_n;
+                for (var syb_j = 0; syb_j < syb_n; syb_j++) {
+                    var syb_box = syb_layer.boxes[syb_j];
+                    syb_box.x = syb_layer.x + 10 + syb_j * (syb_bw + syb_g);
+                    syb_box.y = syb_layer.y;
+                    syb_box.w = syb_bw;
+                    syb_box.h = syb_layer.h;
+                    syb_box.layerTitle = syb_layer.title;
+                    syb_box.color = syb_layer.color;
+                    syb_boxes.push(syb_box);
+                }
+            }
+        }
+
+        /* ============ 绘制工具 ============ */
+        function syb_roundRect(syb_x, syb_y, syb_w2, syb_h2, syb_r) {
+            syb_ctx.beginPath();
+            syb_ctx.moveTo(syb_x + syb_r, syb_y);
+            syb_ctx.arcTo(syb_x + syb_w2, syb_y, syb_x + syb_w2, syb_y + syb_h2, syb_r);
+            syb_ctx.arcTo(syb_x + syb_w2, syb_y + syb_h2, syb_x, syb_y + syb_h2, syb_r);
+            syb_ctx.arcTo(syb_x, syb_y + syb_h2, syb_x, syb_y, syb_r);
+            syb_ctx.arcTo(syb_x, syb_y, syb_x + syb_w2, syb_y, syb_r);
+            syb_ctx.closePath();
+        }
+
+        // 画一条带箭头的竖线（层与层之间）
+        function syb_drawArrow(syb_x, syb_y1, syb_y2, syb_color) {
+            syb_ctx.strokeStyle = syb_color;
+            syb_ctx.lineWidth = 1.6;
+            syb_ctx.beginPath();
+            syb_ctx.moveTo(syb_x, syb_y1);
+            syb_ctx.lineTo(syb_x, syb_y2 - 7);
+            syb_ctx.stroke();
+            syb_ctx.beginPath();
+            syb_ctx.moveTo(syb_x - 5, syb_y2 - 7);
+            syb_ctx.lineTo(syb_x, syb_y2);
+            syb_ctx.lineTo(syb_x + 5, syb_y2 - 7);
+            syb_ctx.closePath();
+            syb_ctx.fillStyle = syb_color;
+            syb_ctx.fill();
+        }
+
+        /* ============ 主绘制函数 ============ */
+        var syb_t = 0;    // 动画时间累计
+
+        function syb_draw() {
+            syb_ctx.clearRect(0, 0, syb_w, syb_h);
+            syb_ctx.fillStyle = "#f8fafc";
+            syb_ctx.fillRect(0, 0, syb_w, syb_h);
+
+            // 1. 层背景 + 左侧竖排层名
+            for (var syb_i = 0; syb_i < syb_layers.length; syb_i++) {
+                var syb_l = syb_layers[syb_i];
+                syb_ctx.fillStyle = "#ffffff";
+                syb_roundRect(syb_l.x, syb_l.y, syb_l.w, syb_l.h, 10);
+                syb_ctx.fill();
+                syb_ctx.strokeStyle = syb_l.color;
+                syb_ctx.lineWidth = 2;
+                syb_ctx.stroke();
+
+                // 左侧竖排层名（逐字绘制）
+                syb_ctx.fillStyle = syb_l.color;
+                syb_ctx.font = "bold 14px 'Microsoft YaHei'";
+                syb_ctx.textAlign = "center";
+                syb_ctx.textBaseline = "middle";
+                var syb_chars = syb_l.title.split("");
+                var syb_startY = syb_l.y + syb_l.h / 2 - (syb_chars.length - 1) * 10;
+                for (var syb_c = 0; syb_c < syb_chars.length; syb_c++) {
+                    syb_ctx.fillText(syb_chars[syb_c], 42, syb_startY + syb_c * 20);
+                }
+            }
+
+            // 2. 层间箭头
+            for (var syb_a = 0; syb_a < syb_layers.length - 1; syb_a++) {
+                var syb_top2 = syb_layers[syb_a].y + syb_layers[syb_a].h;
+                var syb_bot2 = syb_layers[syb_a + 1].y;
+                var syb_arrowsX = [syb_w * 0.28, syb_w * 0.5, syb_w * 0.72];
+                for (var syb_k = 0; syb_k < syb_arrowsX.length; syb_k++) {
+                    syb_drawArrow(syb_arrowsX[syb_k], syb_top2 + 4, syb_bot2 - 4, "#b8c4cc");
+                }
+            }
+
+            // 3. 模块盒子
+            for (var syb_b = 0; syb_b < syb_boxes.length; syb_b++) {
+                var syb_box = syb_boxes[syb_b];
+                var syb_hover = syb_pointInBox(syb_mouse, syb_box);
+                var syb_isSel = syb_selected === syb_box;
+
+                syb_roundRect(syb_box.x, syb_box.y, syb_box.w, syb_box.h, 8);
+                syb_ctx.fillStyle = syb_hover || syb_isSel ? syb_box.color : "#fff";
+                if (syb_hover || syb_isSel) {
+                    syb_ctx.globalAlpha = 0.92;
+                }
+                syb_ctx.fill();
+                syb_ctx.globalAlpha = 1;
+                syb_ctx.strokeStyle = syb_isSel ? "#1d7a40" : syb_box.color;
+                syb_ctx.lineWidth = syb_isSel ? 3 : 1.6;
+                syb_ctx.stroke();
+
+                // 模块文字：悬停/选中时用白色，否则用深色
+                syb_ctx.fillStyle = syb_hover || syb_isSel ? "#ffffff" : "#2c3e50";
+                syb_ctx.font = "bold 13px 'Microsoft YaHei'";
+                syb_ctx.textAlign = "center";
+                syb_ctx.textBaseline = "middle";
+                var syb_lines = syb_wrapText(syb_box.label, syb_box.w - 14);
+                var syb_ly = syb_box.y + syb_box.h / 2 - (syb_lines.length - 1) * 9;
+                for (var syb_ln = 0; syb_ln < syb_lines.length; syb_ln++) {
+                    syb_ctx.fillText(syb_lines[syb_ln], syb_box.x + syb_box.w / 2, syb_ly + syb_ln * 18);
+                }
+            }
+
+            // 4. 数据流动画：绿色小球沿层间箭头向下流动
+            if (syb_showFlow && syb_playing) {
+                syb_t += 16;
+                for (var syb_g = 0; syb_g < syb_layers.length - 1; syb_g++) {
+                    var syb_gy1 = syb_layers[syb_g].y + syb_layers[syb_g].h + 4;
+                    var syb_gy2 = syb_layers[syb_g + 1].y - 4;
+                    var syb_gH = syb_gy2 - syb_gy1;
+                    var syb_xs = [syb_w * 0.28, syb_w * 0.5, syb_w * 0.72];
+                    for (var syb_xi = 0; syb_xi < syb_xs.length; syb_xi++) {
+                        for (var syb_d = 0; syb_d < 3; syb_d++) {
+                            var syb_prog = ((syb_t / 900) + syb_d / 3 + syb_g * 0.31) % 1;
+                            var syb_dy = syb_gy1 + syb_gH * syb_prog;
+                            syb_ctx.beginPath();
+                            syb_ctx.arc(syb_xs[syb_xi], syb_dy, 4, 0, Math.PI * 2);
+                            syb_ctx.fillStyle = "rgba(33, 179, 86, " + (0.9 - syb_prog * 0.5) + ")";
+                            syb_ctx.fill();
+                        }
+                    }
+                }
+            }
+        }
+
+        // 文字自动换行（中文逐字断行）
+        function syb_wrapText(syb_text, syb_maxW) {
+            var syb_out = [];
+            var syb_line = "";
+            for (var syb_i = 0; syb_i < syb_text.length; syb_i++) {
+                if (syb_ctx.measureText(syb_line + syb_text[syb_i]).width > syb_maxW) {
+                    syb_out.push(syb_line);
+                    syb_line = syb_text[syb_i];
+                } else {
+                    syb_line += syb_text[syb_i];
+                }
+            }
+            if (syb_line !== "") { syb_out.push(syb_line); }
+            return syb_out;
+        }
+
+        function syb_pointInBox(syb_pt, syb_box) {
+            return syb_pt.x >= syb_box.x && syb_pt.x <= syb_box.x + syb_box.w &&
+                   syb_pt.y >= syb_box.y && syb_pt.y <= syb_box.y + syb_box.h;
+        }
+
+        function syb_findBox(syb_x, syb_y) {
+            for (var syb_i = 0; syb_i < syb_boxes.length; syb_i++) {
+                if (syb_pointInBox({ x: syb_x, y: syb_y }, syb_boxes[syb_i])) {
+                    return syb_boxes[syb_i];
+                }
+            }
+            return null;
+        }
+
+        /* ============ 交互 ============ */
+        syb_canvas.addEventListener("mousemove", function (syb_e) {
+            var syb_rect = syb_canvas.getBoundingClientRect();
+            syb_mouse.x = (syb_e.clientX - syb_rect.left) * (syb_w / syb_rect.width);
+            syb_mouse.y = (syb_e.clientY - syb_rect.top) * (syb_h / syb_rect.height);
+            var syb_box = syb_findBox(syb_mouse.x, syb_mouse.y);
+            var syb_info = document.getElementById("syb_info");
+            if (syb_box) {
+                syb_info.innerHTML = "<b>[" + syb_box.layerTitle + "] " + syb_box.label + "</b><br><span>" +
+                    syb_box.desc + "</span>";
+            } else if (syb_selected) {
+                syb_info.innerHTML = "<b>[" + syb_selected.layerTitle + "] " + syb_selected.label + "</b><br><span>" +
+                    syb_selected.desc + "</span>";
+            } else {
+                syb_info.innerHTML = "<b>瓜子二手车全站系统架构</b><br><span>从上到下分为五层：用户层 → 接入层 → 业务服务层 → 中间件层 → 数据层，请求自上而下逐层流转。</span>";
+            }
+        });
+        syb_canvas.addEventListener("mouseleave", function () {
+            syb_mouse.x = -1; syb_mouse.y = -1;
+        });
+        syb_canvas.addEventListener("click", function (syb_e) {
+            var syb_rect = syb_canvas.getBoundingClientRect();
+            syb_selected = syb_findBox(
+                (syb_e.clientX - syb_rect.left) * (syb_w / syb_rect.width),
+                (syb_e.clientY - syb_rect.top) * (syb_h / syb_rect.height)
+            );
+        });
+
+        function syb_togglePlay() {
+            syb_playing = !syb_playing;
+            document.getElementById("syb_play_btn").innerHTML = syb_playing ? "暂停动画" : "继续动画";
+        }
+        function syb_toggleFlow() {
+            syb_showFlow = !syb_showFlow;
+            document.getElementById("syb_flow_btn").innerHTML = syb_showFlow ? "隐藏数据流" : "显示数据流";
+        }
+
+        /* ============ 动画循环：暂停时时间不前进，但仍持续重绘（保留悬停高亮） ============ */
+        function syb_loop() {
+            syb_draw();
+            requestAnimationFrame(syb_loop);
+        }
+
+        syb_layout();
+        syb_loop();
+    </script>
+</body>
+</html>

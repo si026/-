@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.05
+使用的大模型：CodeBuddy Auto
+功能名称：基于知识库的智能客服系统架构图（SVG 绘制，含科研方向标注）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— 基于知识库的智能客服系统架构图（SVG）</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则），iconfont 自带类名除外 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 22px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_stage {
+            max-width: 1020px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            border-top: 4px solid #8e44ad;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+        }
+        svg { display: block; width: 100%; height: auto; }
+
+        /* SVG 模块交互样式 */
+        .syb_node { cursor: pointer; }
+        .syb_node rect { transition: fill 0.2s; }
+        .syb_node:hover rect.syb_rect { fill: #8e44ad !important; }
+        .syb_node:hover text { fill: #fff !important; }
+        .syb_node.syb_sel rect.syb_rect { stroke: #1d7a40; stroke-width: 3; }
+
+        .syb_info {
+            max-width: 1020px;
+            margin: 16px auto 0;
+            background: #fff;
+            border-radius: 10px;
+            border-left: 4px solid #8e44ad;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 14px 18px;
+            font-size: 14px;
+            line-height: 1.7;
+            min-height: 58px;
+        }
+        .syb_info b { color: #6c3483; }
+        .syb_info span { color: #666; }
+
+        .syb_note {
+            max-width: 1020px;
+            margin: 20px auto 0;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #7d6608;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— 基于知识库的智能客服系统架构图</h1>
+        <p>SVG 矢量图绘制 · 绿色小球模拟"一次提问"在系统中的流转路径 · 悬停模块查看说明 · 右侧为科研方向标注</p>
+    </div>
+
+    <div class="syb_stage">
+        <svg viewBox="0 0 980 760" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- 箭头 -->
+                <marker id="syb_arrow" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,0 L9,4 L0,8 Z" fill="#b8c4cc"/>
+                </marker>
+                <marker id="syb_arrow_purple" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+                    <path d="M0,0 L9,4 L0,8 Z" fill="#c39bd3"/>
+                </marker>
+                <!-- 层背景渐变 -->
+                <linearGradient id="syb_core_grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#f5eef8"/>
+                    <stop offset="1" stop-color="#ede7f6"/>
+                </linearGradient>
+                <linearGradient id="syb_kb_grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#fef9e7"/>
+                    <stop offset="1" stop-color="#fdebd0"/>
+                </linearGradient>
+            </defs>
+
+            <!-- 背景 -->
+            <rect x="0" y="0" width="980" height="760" fill="#f8fafc"/>
+
+            <!-- ================= 层背景 ================= -->
+            <g>
+                <rect class="syb_band" x="20" y="16" width="730" height="86" rx="10" fill="#ffffff" stroke="#3498db" stroke-width="2"/>
+                <rect class="syb_band" x="20" y="132" width="730" height="86" rx="10" fill="#ffffff" stroke="#27ae60" stroke-width="2"/>
+                <rect class="syb_band" x="20" y="248" width="730" height="118" rx="10" fill="url(#syb_core_grad)" stroke="#8e44ad" stroke-width="2.5"/>
+                <rect class="syb_band" x="20" y="396" width="730" height="118" rx="10" fill="url(#syb_kb_grad)" stroke="#e67e22" stroke-width="2.5"/>
+                <rect class="syb_band" x="20" y="544" width="730" height="86" rx="10" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+                <rect class="syb_band" x="20" y="660" width="730" height="80" rx="10" fill="#ffffff" stroke="#16a085" stroke-width="2" stroke-dasharray="6,4"/>
+            </g>
+
+            <!-- 左侧竖排层名 -->
+            <g font-family="Microsoft YaHei" font-size="14" font-weight="bold" text-anchor="middle">
+                <text x="48" y="42" fill="#3498db">用</text><text x="48" y="64" fill="#3498db">户</text><text x="48" y="86" fill="#3498db">层</text>
+                <text x="48" y="158" fill="#27ae60">接</text><text x="48" y="180" fill="#27ae60">入</text><text x="48" y="202" fill="#27ae60">层</text>
+                <text x="46" y="288" fill="#8e44ad">问</text><text x="46" y="308" fill="#8e44ad">答</text><text x="46" y="328" fill="#8e44ad">引</text><text x="46" y="348" fill="#8e44ad">擎</text>
+                <text x="48" y="438" fill="#b9770e">知</text><text x="48" y="458" fill="#b9770e">识</text><text x="48" y="478" fill="#b9770e">库</text><text x="48" y="498" fill="#b9770e">层</text>
+                <text x="48" y="570" fill="#c0392b">数</text><text x="48" y="590" fill="#c0392b">据</text><text x="48" y="610" fill="#c0392b">层</text>
+                <text x="48" y="686" fill="#16a085">反</text><text x="48" y="706" fill="#16a085">馈</text><text x="48" y="726" fill="#16a085">层</text>
+            </g>
+
+            <!-- ================= 层间箭头 ================= -->
+            <g stroke="#b8c4cc" stroke-width="1.8" fill="none">
+                <line x1="250" y1="102" x2="250" y2="128" marker-end="url(#syb_arrow)"/>
+                <line x1="385" y1="102" x2="385" y2="128" marker-end="url(#syb_arrow)"/>
+                <line x1="520" y1="102" x2="520" y2="128" marker-end="url(#syb_arrow)"/>
+
+                <line x1="250" y1="218" x2="250" y2="244" marker-end="url(#syb_arrow)"/>
+                <line x1="385" y1="218" x2="385" y2="244" marker-end="url(#syb_arrow)"/>
+                <line x1="520" y1="218" x2="520" y2="244" marker-end="url(#syb_arrow)"/>
+
+                <line x1="250" y1="366" x2="250" y2="392" marker-end="url(#syb_arrow)"/>
+                <line x1="385" y1="366" x2="385" y2="392" marker-end="url(#syb_arrow)"/>
+                <line x1="520" y1="366" x2="520" y2="392" marker-end="url(#syb_arrow)"/>
+
+                <line x1="250" y1="514" x2="250" y2="540" marker-end="url(#syb_arrow)"/>
+                <line x1="385" y1="514" x2="385" y2="540" marker-end="url(#syb_arrow)"/>
+                <line x1="520" y1="514" x2="520" y2="540" marker-end="url(#syb_arrow)"/>
+
+                <line x1="250" y1="630" x2="250" y2="656" marker-end="url(#syb_arrow)"/>
+                <line x1="520" y1="630" x2="520" y2="656" marker-end="url(#syb_arrow)"/>
+            </g>
+
+            <!-- 知识扩充闭环（虚线大回路，科研重点） -->
+            <path d="M 620 700 C 758 700 758 480 700 470" stroke="#16a085" stroke-width="2" stroke-dasharray="7,5" fill="none" marker-end="url(#syb_arrow_purple)"/>
+            <text x="712" y="592" font-family="Microsoft YaHei" font-size="12" fill="#16a085" text-anchor="middle" transform="rotate(90 712 592)">知识扩充闭环：未命中问题 → 人工标注 → 入库</text>
+
+            <!-- ================= 用户层 ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <g class="syb_node" data-name="[用户层] 客服窗口（网页）" data-desc="网站右下角的在线客服聊天窗口，用户输入问题的地方">
+                    <rect class="syb_rect" x="70" y="34" width="200" height="50" rx="8" fill="#eaf4fc" stroke="#3498db" stroke-width="1.6"/>
+                    <text x="170" y="64" font-size="14" font-weight="bold" fill="#2471a3">客服窗口（网页）</text>
+                </g>
+                <g class="syb_node" data-name="[用户层] 小程序客服" data-desc="微信小程序内置客服会话，支持图文消息">
+                    <rect class="syb_rect" x="290" y="34" width="200" height="50" rx="8" fill="#eaf4fc" stroke="#3498db" stroke-width="1.6"/>
+                    <text x="390" y="64" font-size="14" font-weight="bold" fill="#2471a3">小程序客服</text>
+                </g>
+                <g class="syb_node" data-name="[用户层] App 在线客服" data-desc="App 内嵌客服模块，可携带用户行为上下文">
+                    <rect class="syb_rect" x="510" y="34" width="200" height="50" rx="8" fill="#eaf4fc" stroke="#3498db" stroke-width="1.6"/>
+                    <text x="610" y="64" font-size="14" font-weight="bold" fill="#2471a3">App 在线客服</text>
+                </g>
+            </g>
+
+            <!-- ================= 接入层 ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <g class="syb_node" data-name="[接入层] 会话管理" data-desc="管理会话 ID、多轮上下文消息队列、超时与转人工逻辑">
+                    <rect class="syb_rect" x="70" y="150" width="200" height="50" rx="8" fill="#e8f8f0" stroke="#27ae60" stroke-width="1.6"/>
+                    <text x="170" y="180" font-size="14" font-weight="bold" fill="#1e8449">会话管理</text>
+                </g>
+                <g class="syb_node" data-name="[接入层] 文本预处理" data-desc="分词、去停用词、拼音纠错与错别字纠正">
+                    <rect class="syb_rect" x="290" y="150" width="200" height="50" rx="8" fill="#e8f8f0" stroke="#27ae60" stroke-width="1.6"/>
+                    <text x="390" y="180" font-size="14" font-weight="bold" fill="#1e8449">分词 / 纠错预处理</text>
+                </g>
+                <g class="syb_node" data-name="[接入层] 意图识别" data-desc="判断用户意图类型：咨询类 / 交易类 / 投诉类，非咨询类直接转人工">
+                    <rect class="syb_rect" x="510" y="150" width="200" height="50" rx="8" fill="#e8f8f0" stroke="#27ae60" stroke-width="1.6"/>
+                    <text x="610" y="180" font-size="14" font-weight="bold" fill="#1e8449">意图识别（NLU）</text>
+                </g>
+            </g>
+
+            <!-- ================= 问答引擎层（核心） ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <text x="385" y="272" font-size="13" fill="#8e44ad" font-weight="bold">—— 智能问答引擎（系统核心）——</text>
+                <g class="syb_node" data-name="[问答引擎] 问句向量化" data-desc="科研模块：用 BERT / Sentence-BERT 把问句编码成语义向量，是语义匹配的基础">
+                    <rect class="syb_rect" x="40" y="284" width="160" height="62" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="2"/>
+                    <text x="120" y="308" font-size="13" font-weight="bold" fill="#6c3483">问句向量化</text>
+                    <text x="120" y="328" font-size="11" fill="#8e44ad">Sentence-BERT</text>
+                </g>
+                <g class="syb_node" data-name="[问答引擎] 知识检索" data-desc="科研模块：混合检索——关键词倒排索引粗筛 + 向量近邻检索（ANN）精排召回">
+                    <rect class="syb_rect" x="215" y="284" width="160" height="62" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="2"/>
+                    <text x="295" y="308" font-size="13" font-weight="bold" fill="#6c3483">知识检索</text>
+                    <text x="295" y="328" font-size="11" fill="#8e44ad">倒排 + 向量 ANN</text>
+                </g>
+                <g class="syb_node" data-name="[问答引擎] 答案排序" data-desc="科研模块：语义相似度 + 编辑距离 + 热度特征加权融合排序，输出 Top-N 候选答案">
+                    <rect class="syb_rect" x="390" y="284" width="160" height="62" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="2"/>
+                    <text x="470" y="308" font-size="13" font-weight="bold" fill="#6c3483">答案排序</text>
+                    <text x="470" y="328" font-size="11" fill="#8e44ad">相似度融合排序</text>
+                </g>
+                <g class="syb_node" data-name="[问答引擎] 多轮对话管理" data-desc="科研模块：维护对话状态机与槽位，支持追问澄清与上下文继承">
+                    <rect class="syb_rect" x="565" y="284" width="165" height="62" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="2"/>
+                    <text x="647" y="308" font-size="13" font-weight="bold" fill="#6c3483">多轮对话管理</text>
+                    <text x="647" y="328" font-size="11" fill="#8e44ad">状态机 + 槽位</text>
+                </g>
+            </g>
+
+            <!-- ================= 知识库层 ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <g class="syb_node" data-name="[知识库层] FAQ 问答对库" data-desc="人工整理的标准问-答对，是命中率的基础数据（如：怎么卖车→卖车流程说明）">
+                    <rect class="syb_rect" x="40" y="414" width="160" height="62" rx="8" fill="#fef9e7" stroke="#e67e22" stroke-width="2"/>
+                    <text x="120" y="438" font-size="13" font-weight="bold" fill="#b9770e">FAQ 问答对库</text>
+                    <text x="120" y="458" font-size="11" fill="#b9770e">标准问 / 相似问</text>
+                </g>
+                <g class="syb_node" data-name="[知识库层] 文档知识库" data-desc="业务制度、流程说明等长文档，检索后可摘取片段作答">
+                    <rect class="syb_rect" x="215" y="414" width="160" height="62" rx="8" fill="#fef9e7" stroke="#e67e22" stroke-width="2"/>
+                    <text x="295" y="438" font-size="13" font-weight="bold" fill="#b9770e">文档知识库</text>
+                    <text x="295" y="458" font-size="11" fill="#b9770e">制度 / 流程文档</text>
+                </g>
+                <g class="syb_node" data-name="[知识库层] 向量数据库" data-desc="科研模块：FAQ 与文档切片的 Embedding 向量库（如 Faiss / Milvus），支持毫秒级近邻检索">
+                    <rect class="syb_rect" x="390" y="414" width="160" height="62" rx="8" fill="#fef9e7" stroke="#e67e22" stroke-width="2"/>
+                    <text x="470" y="438" font-size="13" font-weight="bold" fill="#b9770e">向量数据库</text>
+                    <text x="470" y="458" font-size="11" fill="#b9770e">Faiss / Milvus</text>
+                </g>
+                <g class="syb_node" data-name="[知识库层] 同义词词库" data-desc="业务同义词与口语化表达映射（如：卖车=出手车辆），提升召回率">
+                    <rect class="syb_rect" x="565" y="414" width="165" height="62" rx="8" fill="#fef9e7" stroke="#e67e22" stroke-width="2"/>
+                    <text x="647" y="438" font-size="13" font-weight="bold" fill="#b9770e">同义词词库</text>
+                    <text x="647" y="458" font-size="11" fill="#b9770e">领域词典扩展</text>
+                </g>
+            </g>
+
+            <!-- ================= 数据层 ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <g class="syb_node" data-name="[数据层] MySQL" data-desc="存储知识条目、会话记录、人工审核工单等结构化数据">
+                    <rect class="syb_rect" x="70" y="562" width="200" height="50" rx="8" fill="#fdedec" stroke="#c0392b" stroke-width="1.6"/>
+                    <text x="170" y="592" font-size="14" font-weight="bold" fill="#c0392b">MySQL 业务库</text>
+                </g>
+                <g class="syb_node" data-name="[数据层] Redis 缓存" data-desc="热点问答缓存与会话状态缓存，降低检索引擎压力">
+                    <rect class="syb_rect" x="290" y="562" width="200" height="50" rx="8" fill="#fdedec" stroke="#c0392b" stroke-width="1.6"/>
+                    <text x="390" y="592" font-size="14" font-weight="bold" fill="#c0392b">Redis 缓存</text>
+                </g>
+                <g class="syb_node" data-name="[数据层] 日志与埋点" data-desc="记录每次检索的召回列表与点击行为，作为科研实验的数据来源">
+                    <rect class="syb_rect" x="510" y="562" width="200" height="50" rx="8" fill="#fdedec" stroke="#c0392b" stroke-width="1.6"/>
+                    <text x="610" y="592" font-size="14" font-weight="bold" fill="#c0392b">日志 / 埋点</text>
+                </g>
+            </g>
+
+            <!-- ================= 反馈层 ================= -->
+            <g font-family="Microsoft YaHei" text-anchor="middle">
+                <g class="syb_node" data-name="[反馈层] 用户评价收集" data-desc="对答案点“有用/没用”，作为排序模型训练的弱标注数据">
+                    <rect class="syb_rect" x="70" y="676" width="200" height="50" rx="8" fill="#e8f6f3" stroke="#16a085" stroke-width="1.6"/>
+                    <text x="170" y="706" font-size="14" font-weight="bold" fill="#16a085">用户评价收集</text>
+                </g>
+                <g class="syb_node" data-name="[反馈层] 未命中问题挖掘" data-desc="科研闭环：聚类分析未命中问题，发现知识盲区，指导 FAQ 补充">
+                    <rect class="syb_rect" x="290" y="676" width="200" height="50" rx="8" fill="#e8f6f3" stroke="#16a085" stroke-width="1.6"/>
+                    <text x="390" y="706" font-size="14" font-weight="bold" fill="#16a085">未命中问题挖掘</text>
+                </g>
+                <g class="syb_node" data-name="[反馈层] 人工标注入库" data-desc="运营人员审核新问答对，经标注平台入库，完成知识扩充闭环">
+                    <rect class="syb_rect" x="510" y="676" width="200" height="50" rx="8" fill="#e8f6f3" stroke="#16a085" stroke-width="1.6"/>
+                    <text x="610" y="706" font-size="14" font-weight="bold" fill="#16a085">人工标注入库</text>
+                </g>
+            </g>
+
+            <!-- ================= 右侧：科研方向 ================= -->
+            <g>
+                <rect x="770" y="16" width="190" height="724" rx="10" fill="#faf5ff" stroke="#8e44ad" stroke-width="2.5" stroke-dasharray="8,5"/>
+                <text x="865" y="46" font-family="Microsoft YaHei" font-size="15" font-weight="bold" fill="#6c3483" text-anchor="middle">科 研 方 向</text>
+
+                <g class="syb_node" data-name="[科研方向①] 语义匹配与排序算法" data-desc="研究句向量模型（Sentence-BERT / SimCSE）在客服语料上的微调，目标是提升 Top-1 命中率与 MRR 指标">
+                    <rect class="syb_rect" x="784" y="62" width="162" height="120" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="1.6"/>
+                    <text x="865" y="88" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">① 语义匹配</text>
+                    <text x="865" y="106" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">与排序算法</text>
+                    <text x="865" y="130" font-size="11" fill="#8e44ad" text-anchor="middle">Sentence-BERT 微调</text>
+                    <text x="865" y="148" font-size="11" fill="#8e44ad" text-anchor="middle">指标：命中率 / MRR</text>
+                </g>
+                <g class="syb_node" data-name="[科研方向②] 检索增强生成（RAG）" data-desc="研究把知识库检索结果作为上下文交给生成式大模型组织答案，降低大模型幻觉，提升回答可读性">
+                    <rect class="syb_rect" x="784" y="196" width="162" height="120" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="1.6"/>
+                    <text x="865" y="222" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">② 检索增强</text>
+                    <text x="865" y="240" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">生成（RAG）</text>
+                    <text x="865" y="264" font-size="11" fill="#8e44ad" text-anchor="middle">检索结果 + 大模型</text>
+                    <text x="865" y="282" font-size="11" fill="#8e44ad" text-anchor="middle">抑制幻觉问题</text>
+                </g>
+                <g class="syb_node" data-name="[科研方向③] 知识库自动构建" data-desc="研究从历史客服对话日志中自动抽取问答对（聚类 + 大模型改写），降低人工维护成本">
+                    <rect class="syb_rect" x="784" y="330" width="162" height="120" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="1.6"/>
+                    <text x="865" y="356" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">③ 知识库</text>
+                    <text x="865" y="374" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">自动构建与更新</text>
+                    <text x="865" y="398" font-size="11" fill="#8e44ad" text-anchor="middle">对话日志聚类抽取</text>
+                    <text x="865" y="416" font-size="11" fill="#8e44ad" text-anchor="middle">相似问自动生成</text>
+                </g>
+                <g class="syb_node" data-name="[科研方向④] 效果评测体系" data-desc="构建离线评测集与在线 A/B 实验体系：命中率、MRR、转人工率、满意度等多指标综合评估">
+                    <rect class="syb_rect" x="784" y="464" width="162" height="120" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="1.6"/>
+                    <text x="865" y="490" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">④ 效果评测体系</text>
+                    <text x="865" y="514" font-size="11" fill="#8e44ad" text-anchor="middle">离线评测集构建</text>
+                    <text x="865" y="532" font-size="11" fill="#8e44ad" text-anchor="middle">在线 A/B 实验</text>
+                    <text x="865" y="550" font-size="11" fill="#8e44ad" text-anchor="middle">多指标：命中率/满意度</text>
+                </g>
+                <g class="syb_node" data-name="[科研方向⑤] 反馈闭环学习" data-desc="研究利用用户点击反馈做在线学习（Learning to Rank），让排序模型随数据持续进化">
+                    <rect class="syb_rect" x="784" y="598" width="162" height="120" rx="8" fill="#ffffff" stroke="#8e44ad" stroke-width="1.6"/>
+                    <text x="865" y="624" font-size="13" font-weight="bold" fill="#6c3483" text-anchor="middle">⑤ 反馈闭环学习</text>
+                    <text x="865" y="648" font-size="11" fill="#8e44ad" text-anchor="middle">点击反馈 → 弱标注</text>
+                    <text x="865" y="666" font-size="11" fill="#8e44ad" text-anchor="middle">Learning to Rank</text>
+                    <text x="865" y="684" font-size="11" fill="#8e44ad" text-anchor="middle">持续在线优化</text>
+                </g>
+            </g>
+
+            <!-- ================= 数据流动画：一次提问的流转 ================= -->
+            <path id="syb_path1" d="M 170 84 L 170 150 L 170 284" fill="none" stroke="none"/>
+            <path id="syb_path2" d="M 295 346 L 295 414 L 470 414" fill="none" stroke="none"/>
+            <path id="syb_path3" d="M 470 476 L 470 284" fill="none" stroke="none"/>
+            <circle r="5" fill="#21b356">
+                <animateMotion dur="4s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#syb_path1"/>
+                </animateMotion>
+            </circle>
+            <circle r="5" fill="#e67e22">
+                <animateMotion dur="4s" begin="1.3s" repeatCount="indefinite">
+                    <mpath href="#syb_path2"/>
+                </animateMotion>
+            </circle>
+            <circle r="5" fill="#8e44ad">
+                <animateMotion dur="4s" begin="2.6s" repeatCount="indefinite">
+                    <mpath href="#syb_path3"/>
+                </animateMotion>
+            </circle>
+        </svg>
+    </div>
+
+    <div class="syb_info" id="syb_info">
+        <b>基于知识库的智能客服系统架构</b><br>
+        <span>一次提问的完整链路：用户提问 → 预处理与意图识别 → 问答引擎（向量化 → 检索 → 排序 → 多轮管理）→ 从知识库取答案 → 返回用户；未命中的问题经反馈层回流，持续扩充知识库。悬停任意模块查看说明。</span>
+    </div>
+
+    <div class="syb_note">
+        <strong>科研方向说明</strong>：右侧五个虚线框是本系统的科研切入点——①语义匹配与排序算法（句向量模型微调）；
+        ②RAG 检索增强生成（知识库 + 大模型）；③知识库自动构建（从对话日志自动抽取问答对）；
+        ④效果评测体系（命中率 / MRR / 满意度）；⑤反馈闭环学习（点击反馈驱动排序模型在线进化）。
+        图中绿色 / 橙色 / 紫色小球演示了一次提问经过"用户层 → 引擎 → 知识库 → 引擎"的往返路径。
+    </div>
+
+    <script>
+        /* ============ SVG 模块交互：悬停 / 点击显示说明 ============ */
+        var syb_nodes = document.querySelectorAll(".syb_node");
+        var syb_info = document.getElementById("syb_info");
+        var syb_default = syb_info.innerHTML;
+        var syb_selectedNode = null;
+
+        function syb_showInfo(syb_node) {
+            syb_info.innerHTML = "<b>" + syb_node.getAttribute("data-name") + "</b><br><span>" +
+                syb_node.getAttribute("data-desc") + "</span>";
+        }
+
+        for (var syb_i = 0; syb_i < syb_nodes.length; syb_i++) {
+            (function (syb_node) {
+                syb_node.addEventListener("mouseenter", function () {
+                    syb_showInfo(syb_node);
+                });
+                syb_node.addEventListener("mouseleave", function () {
+                    if (syb_selectedNode) {
+                        syb_showInfo(syb_selectedNode);
+                    } else {
+                        syb_info.innerHTML = syb_default;
+                    }
+                });
+                syb_node.addEventListener("click", function () {
+                    // 切换选中：点同一个取消，点别的换目标
+                    if (syb_selectedNode === syb_node) {
+                        syb_node.classList.remove("syb_sel");
+                        syb_selectedNode = null;
+                    } else {
+                        if (syb_selectedNode) { syb_selectedNode.classList.remove("syb_sel"); }
+                        syb_node.classList.add("syb_sel");
+                        syb_selectedNode = syb_node;
+                    }
+                    syb_showInfo(syb_node);
+                });
+            })(syb_nodes[syb_i]);
+        }
+    </script>
+</body>
+</html>

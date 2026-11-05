@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<!--
+姓名：司雅博（syb）
+建立时间：2026.11.05
+使用的大模型：CodeBuddy Auto
+功能名称：Canvas 粒子文字动画（"司雅博"由粒子聚合而成，支持打散/重组/自定义文字）
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>司雅博的JavaScript —— Canvas 粒子文字动画</title>
+    <style>
+        /* 类名全部以 syb_ 开头（项目规则） */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+            background: #f5f6f8;
+            color: #333;
+            padding: 40px 24px;
+        }
+        .syb_header { text-align: center; margin-bottom: 22px; }
+        .syb_header h1 { font-size: 26px; color: #2c3e50; }
+        .syb_header p { margin-top: 10px; font-size: 14px; color: #7f8c8d; }
+
+        .syb_stage {
+            max-width: 940px;
+            margin: 0 auto;
+            background: #0f172a;
+            border-radius: 14px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        canvas { display: block; width: 100%; cursor: crosshair; }
+
+        .syb_toolbar {
+            max-width: 940px;
+            margin: 16px auto 0;
+            background: #fff;
+            border-radius: 10px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .syb_text_input {
+            flex: 1;
+            min-width: 160px;
+            height: 38px;
+            border: 1px solid #dcdfe4;
+            border-radius: 19px;
+            padding: 0 16px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+        .syb_text_input:focus { border-color: #3498db; }
+        .syb_btn {
+            border: none;
+            border-radius: 19px;
+            height: 38px;
+            padding: 0 18px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #fff;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .syb_btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .syb_btn_orange { background: #e67e22; }
+        .syb_btn_orange:hover { background: #d35400; }
+        .syb_btn_purple { background: #8e44ad; }
+        .syb_btn_purple:hover { background: #71368a; }
+        .syb_tip {
+            max-width: 940px;
+            margin: 14px auto 0;
+            font-size: 12px;
+            color: #b0b0b0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="syb_header">
+        <h1>司雅博的JavaScript —— Canvas 粒子文字动画</h1>
+        <p>几千个小粒子在画布上自由飞行，然后逐渐聚合成"司雅博"三个大字（Canvas 逐帧绘制）</p>
+    </div>
+
+    <div class="syb_stage">
+        <canvas id="syb_canvas" width="900" height="460"></canvas>
+    </div>
+
+    <div class="syb_toolbar">
+        <input class="syb_text_input" id="syb_text_input" value="司雅博" maxlength="10" placeholder="输入任意文字">
+        <button class="syb_btn" onclick="syb_changeText()">更换文字</button>
+        <button class="syb_btn syb_btn_orange" onclick="syb_scatter()">打散</button>
+        <button class="syb_btn syb_btn_orange" onclick="syb_gather()">重组</button>
+        <button class="syb_btn syb_btn_purple" onclick="syb_switchColor()">换个配色</button>
+    </div>
+    <p class="syb_tip">用鼠标在画布上划过，可以把粒子推开，它们随后会自动飞回原位重新拼成文字 · 点"打散"看爆炸效果</p>
+
+    <script>
+        var syb_canvas = document.getElementById("syb_canvas");
+        var syb_ctx = syb_canvas.getContext("2d");
+        var syb_w = syb_canvas.width;
+        var syb_h = syb_canvas.height;
+        var syb_particles = [];
+        var syb_mouse = { x: -9999, y: -9999 };
+        var syb_colorIdx = 0;
+
+        // 四套渐变配色 [亮色, 暗色]
+        var syb_palettes = [
+            ["#36d1dc", "#5b86e5"],
+            ["#f7971e", "#ffd200"],
+            ["#f5576c", "#f093fb"],
+            ["#43e97b", "#38f9d7"]
+        ];
+
+        /* ===== 核心一：把文字"拍成照片"，采样出每个粒子的目标坐标 ===== */
+        function syb_buildTargets(syb_text) {
+            // 离屏 canvas：先在上面把字画出来
+            var syb_off = document.createElement("canvas");
+            syb_off.width = syb_w;
+            syb_off.height = syb_h;
+            var syb_octx = syb_off.getContext("2d");
+            var syb_fontSize = syb_text.length <= 3 ? 170 : (syb_text.length <= 5 ? 120 : 90);
+            syb_octx.font = "bold " + syb_fontSize + "px 'Microsoft YaHei', sans-serif";
+            syb_octx.textAlign = "center";
+            syb_octx.textBaseline = "middle";
+            syb_octx.fillStyle = "#fff";
+            syb_octx.fillText(syb_text, syb_w / 2, syb_h / 2);
+
+            // 读取像素：每隔 gap 个像素取一个不透明的点作为粒子目标位置
+            var syb_data = syb_octx.getImageData(0, 0, syb_w, syb_h).data;
+            var syb_gap = 5;
+            var syb_targets = [];
+            for (var syb_y = 0; syb_y < syb_h; syb_y += syb_gap) {
+                for (var syb_x = 0; syb_x < syb_w; syb_x += syb_gap) {
+                    if (syb_data[(syb_y * syb_w + syb_x) * 4 + 3] > 128) {   // alpha 通道
+                        syb_targets.push({ x: syb_x, y: syb_y });
+                    }
+                }
+            }
+            return syb_targets;
+        }
+
+        /* ===== 核心二：按目标点生成粒子 ===== */
+        function syb_buildParticles(syb_text) {
+            var syb_targets = syb_buildTargets(syb_text);
+            var syb_pal = syb_palettes[syb_colorIdx % syb_palettes.length];
+            syb_particles = [];
+            for (var syb_i = 0; syb_i < syb_targets.length; syb_i++) {
+                var syb_t = syb_targets[syb_i];
+                // 颜色按横向位置在两个渐变色之间取值
+                var syb_ratio = syb_t.x / syb_w;
+                syb_particles.push({
+                    x: Math.random() * syb_w,
+                    y: Math.random() * syb_h,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    tx: syb_t.x,               // 目标位置（文字上的点）
+                    ty: syb_t.y,
+                    size: 1.6 + Math.random() * 1.8,
+                    color: syb_lerp(syb_pal[0], syb_pal[1], syb_ratio)
+                });
+            }
+        }
+
+        // 颜色插值：#rrggbb 按比例混合
+        function syb_lerp(syb_c1, syb_c2, syb_r) {
+            var syb_p = function (syb_c, syb_i) { return parseInt(syb_c.substr(syb_i, 2), 16); };
+            var syb_r1 = Math.round(syb_p(syb_c1, 1) * (1 - syb_r) + syb_p(syb_c2, 1) * syb_r);
+            var syb_g = Math.round(syb_p(syb_c1, 3) * (1 - syb_r) + syb_p(syb_c2, 3) * syb_r);
+            var syb_b = Math.round(syb_p(syb_c1, 5) * (1 - syb_r) + syb_p(syb_c2, 5) * syb_r);
+            return "rgb(" + syb_r1 + "," + syb_g + "," + syb_b + ")";
+        }
+
+        /* ===== 核心三：逐帧动画（requestAnimationFrame） ===== */
+        function syb_animate() {
+            // 半透明覆盖上一层画面 → 产生拖尾残影
+            syb_ctx.fillStyle = "rgba(15, 23, 42, 0.35)";
+            syb_ctx.fillRect(0, 0, syb_w, syb_h);
+
+            for (var syb_i = 0; syb_i < syb_particles.length; syb_i++) {
+                var syb_p = syb_particles[syb_i];
+
+                // 1. 向目标位置（文字上的点）施加弹性引力
+                syb_p.vx += (syb_p.tx - syb_p.x) * 0.015;
+                syb_p.vy += (syb_p.ty - syb_p.y) * 0.015;
+
+                // 2. 鼠标斥力：靠得太近就被推开
+                var syb_dx = syb_p.x - syb_mouse.x;
+                var syb_dy = syb_p.y - syb_mouse.y;
+                var syb_dist = Math.sqrt(syb_dx * syb_dx + syb_dy * syb_dy);
+                if (syb_dist < 80 && syb_dist > 0.01) {
+                    var syb_force = (80 - syb_dist) / 80 * 2.2;
+                    syb_p.vx += syb_dx / syb_dist * syb_force;
+                    syb_p.vy += syb_dy / syb_dist * syb_force;
+                }
+
+                // 3. 摩擦减速 + 移动
+                syb_p.vx *= 0.9;
+                syb_p.vy *= 0.9;
+                syb_p.x += syb_p.vx;
+                syb_p.y += syb_p.vy;
+
+                // 4. 画粒子
+                syb_ctx.beginPath();
+                syb_ctx.arc(syb_p.x, syb_p.y, syb_p.size, 0, Math.PI * 2);
+                syb_ctx.fillStyle = syb_p.color;
+                syb_ctx.fill();
+            }
+            requestAnimationFrame(syb_animate);
+        }
+
+        /* ===== 交互 ===== */
+        syb_canvas.addEventListener("mousemove", function (syb_e) {
+            var syb_rect = syb_canvas.getBoundingClientRect();
+            // canvas 被 CSS 缩放过，要按比例换算坐标
+            syb_mouse.x = (syb_e.clientX - syb_rect.left) * (syb_w / syb_rect.width);
+            syb_mouse.y = (syb_e.clientY - syb_rect.top) * (syb_h / syb_rect.height);
+        });
+        syb_canvas.addEventListener("mouseleave", function () {
+            syb_mouse.x = -9999;
+            syb_mouse.y = -9999;
+        });
+        // 点击画布 = 小型爆炸
+        syb_canvas.addEventListener("click", function (syb_e) {
+            var syb_rect = syb_canvas.getBoundingClientRect();
+            var syb_cx = (syb_e.clientX - syb_rect.left) * (syb_w / syb_rect.width);
+            var syb_cy = (syb_e.clientY - syb_rect.top) * (syb_h / syb_rect.height);
+            for (var syb_i = 0; syb_i < syb_particles.length; syb_i++) {
+                var syb_p = syb_particles[syb_i];
+                var syb_dx = syb_p.x - syb_cx, syb_dy = syb_p.y - syb_cy;
+                var syb_d = Math.sqrt(syb_dx * syb_dx + syb_dy * syb_dy) || 1;
+                if (syb_d < 160) {
+                    syb_p.vx += syb_dx / syb_d * 14;
+                    syb_p.vy += syb_dy / syb_d * 14;
+                }
+            }
+        });
+
+        function syb_scatter() {
+            for (var syb_i = 0; syb_i < syb_particles.length; syb_i++) {
+                syb_particles[syb_i].vx = (Math.random() - 0.5) * 36;
+                syb_particles[syb_i].vy = (Math.random() - 0.5) * 36;
+            }
+        }
+        function syb_gather() {
+            for (var syb_i = 0; syb_i < syb_particles.length; syb_i++) {
+                syb_particles[syb_i].vx = 0;
+                syb_particles[syb_i].vy = 0;
+            }
+        }
+        function syb_changeText() {
+            var syb_text = document.getElementById("syb_text_input").value.replace(/\s/g, "");
+            if (syb_text === "") { syb_text = "司雅博"; }
+            syb_buildParticles(syb_text);
+        }
+        function syb_switchColor() {
+            syb_colorIdx++;
+            var syb_pal = syb_palettes[syb_colorIdx % syb_palettes.length];
+            for (var syb_i = 0; syb_i < syb_particles.length; syb_i++) {
+                syb_particles[syb_i].color = syb_lerp(syb_pal[0], syb_pal[1], syb_particles[syb_i].tx / syb_w);
+            }
+        }
+
+        // 启动
+        syb_buildParticles("司雅博");
+        syb_animate();
+    </script>
+</body>
+</html>
